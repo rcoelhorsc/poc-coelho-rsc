@@ -1,0 +1,215 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  PocPort:
+    AllowedValues:
+      - '3000'
+    Description: Application's ports.
+    Type: String
+    Default: '3000'
+
+  DNS:
+    Type: String
+
+  stage:
+    Type: String
+    AllowedValues:
+      - "dev"
+      - "qa"
+      - "prod"
+
+  RestApiVpcLink:
+    AllowedValues:
+      - "bhdqyo" # Dev
+    Type: String
+
+Resources:
+
+  RestPocApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: poc-coelho
+      Description: poc-coelho
+
+  PocApiRootMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestPocApi
+      ResourceId: !GetAtt RestPocApi.RootResourceId
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: "{ \"statusCode\": 200 }"
+        IntegrationResponses:
+          - StatusCode: 200
+      MethodResponses:
+        - StatusCode: 200
+
+  PocApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+         - PocApiRootMethod
+    Properties:
+      RestApiId: !Ref RestPocApi
+      Description: Deployment of public poc coelho routes
+
+  PocApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      DeploymentId: !Ref PocApiDeployment
+      RestApiId: !Ref RestPocApi
+      StageName: !Ref stage
+      Description: Stage of Poc API
+      TracingEnabled: true  # Ativa o X-Ray no API Gateway
+      # AccessLogSettings:
+      #   DestinationArn: arn:aws:logs:us-east-1:533267006891:log-group:/aws/apigateway/poc-coelho-logs  # ARN do grupo de logs do CloudWatch
+      #   Format: >-
+      #     {
+      #       "accountId": "$context.accountId",
+      #       "apiId": "$context.apiId",
+      #       "authorizerClaimsProperty": "$context.authorizer.claims.property",
+      #       "authorizerPrincipalId": "$context.authorizer.principalId",
+      #       "authorizerProperty": "$context.authorizer.property",
+      #       "awsEndpointRequestId": "$context.awsEndpointRequestId",
+      #       "deploymentId": "$context.deploymentId",
+      #       "domainName": "$context.domainName",
+      #       "domainPrefix": "$context.domainPrefix",
+      #       "errorMessage": "$context.error.message",
+      #       "errorMessageString": "$context.error.messageString",
+      #       "errorResponseType": "$context.error.responseType",
+      #       "errorValidationErrorString": "$context.error.validationErrorString",
+      #       "extendedRequestId": "$context.extendedRequestId",
+      #       "httpMethod": "$context.httpMethod",
+      #       "identityAccountId": "$context.identity.accountId",
+      #       "identityApiKey": "$context.identity.apiKey",
+      #       "identityApiKeyId": "$context.identity.apiKeyId",
+      #       "identityCaller": "$context.identity.caller",
+      #       "identityCognitoAuthenticationProvider": "$context.identity.cognitoAuthenticationProvider",
+      #       "identityCognitoAuthenticationType": "$context.identity.cognitoAuthenticationType",
+      #       "identityCognitoIdentityId": "$context.identity.cognitoIdentityId",
+      #       "identityCognitoIdentityPoolId": "$context.identity.cognitoIdentityPoolId",
+      #       "identityPrincipalOrgId": "$context.identity.principalOrgId",
+      #       "identitySourceIp": "$context.identity.sourceIp",
+      #       "identityClientCertClientCertPem": "$context.identity.clientCert.clientCertPem",
+      #       "identityClientCertSubjectDN": "$context.identity.clientCert.subjectDN",
+      #       "identityClientCertIssuerDN": "$context.identity.clientCert.issuerDN",
+      #       "identityClientCertSerialNumber": "$context.identity.clientCert.serialNumber",
+      #       "identityClientCertValidity.notBefore": "$context.identity.clientCert.validity.notBefore",
+      #       "identityClientCertValidity.notAfter": "$context.identity.clientCert.validity.notAfter",
+      #       "identityVpcId": "$context.identity.vpcId",
+      #       "identityVpceId": "$context.identity.vpceId",
+      #       "identityUser": "$context.identity.user",
+      #       "identityUserAgent": "$context.identity.userAgent",
+      #       "identityUserArn": "$context.identity.userArn",
+      #       "isCanaryRequest": "$context.isCanaryRequest",
+      #       "path": "$context.path",
+      #       "protocol": "$context.protocol",
+      #       "requestId": "$context.requestId",
+      #       "requestOverrideHeaderHeader_name": "$context.requestOverride.header.header_name",
+      #       "requestOverridePathPath_name": "$context.requestOverride.path.path_name",
+      #       "requestOverrideQuerystringQuerystring_name": "$context.requestOverride.querystring.querystring_name",
+      #       "responseOverrideHeaderHeader_name": "$context.responseOverride.header.header_name",
+      #       "responseOverrideStatus": "$context.responseOverride.status",
+      #       "requestTime": "$context.requestTime",
+      #       "requestTimeEpoch": "$context.requestTimeEpoch",
+      #       "resourcePath": "$context.resourcePath",
+      #       "stage": "$context.stage"
+      #     }      
+      MethodSettings:
+        - HttpMethod: "*"
+          ResourcePath: "/*"
+          LoggingLevel: INFO
+          MetricsEnabled: true
+          DataTraceEnabled: true
+          ThrottlingRateLimit: 100
+          ThrottlingBurstLimit: 50
+
+    # ==========================
+    # poc-coelho Paths Resources
+    # ==========================
+
+  # Top-Level Resource for /poc-coelho
+  PocCoelhoResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestPocApi
+      ParentId: !GetAtt RestPocApi.RootResourceId
+      PathPart: poc-coelho
+
+  # Top-Level Resource for /poc-coelho/teste
+  PocCoelhoTesteResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestPocApi
+      ParentId: !Ref PocCoelhoResource
+      PathPart: teste
+
+  # GET poc-coelho/teste
+  PocCoelhoTesteResourceGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestPocApi
+      ResourceId: !Ref PocCoelhoTesteResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: HTTP_PROXY
+        Uri: !Sub 'http://${DNS}:${PocPort}/poc-coelho/teste'
+        IntegrationHttpMethod: GET
+        ConnectionType: VPC_LINK
+        ConnectionId: !Ref RestApiVpcLink
+      MethodResponses:
+        - StatusCode: '200'
+
+  #POST /poc-coelho/teste
+  PocCoelhoTesteResourcePostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestPocApi
+      ResourceId: !Ref PocCoelhoTesteResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: HTTP_PROXY
+        Uri: !Sub 'http://${DNS}:${PocPort}/poc-coelho/teste'
+        IntegrationHttpMethod: POST
+        ConnectionType: VPC_LINK
+        ConnectionId: !Ref RestApiVpcLink
+      MethodResponses:
+        - StatusCode: '201'
+
+  # Top-Level Resource for /poc-coelho/advice
+  PocCoelhoAdviceResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestPocApi
+      ParentId: !Ref PocCoelhoResource
+      PathPart: advice
+
+  # GET poc-coelho/advice
+  PocCoelhoAdviceResourceGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestPocApi
+      ResourceId: !Ref PocCoelhoAdviceResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: HTTP_PROXY
+        Uri: !Sub 'http://${DNS}:${PocPort}/poc-coelho/advice'
+        IntegrationHttpMethod: GET
+        ConnectionType: VPC_LINK
+        ConnectionId: !Ref RestApiVpcLink
+      MethodResponses:
+        - StatusCode: '200'
+
+
+# Outputs:
+#   RootResourceId:
+#     Description: 'Root resource ID'
+#     Value: !GetAtt RestOmnichannelApi.RootResourceId
+#   RestAPIId:
+#     Description: 'API ID'
+#     Value: !Ref RestOmnichannelApi

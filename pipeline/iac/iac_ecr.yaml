@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  EcrRepositoryName:
+    Type: String
+    Description: Name of the ECR repository to create"
+ 
+Resources:
+  Repository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref EcrRepositoryName
+      EmptyOnDelete: true
+      RepositoryPolicyText:
+        {
+          'Version': '2012-10-17',
+          'Statement':
+            [
+              {
+                'Sid': 'new statement',
+                'Effect': 'Allow',
+                'Principal':
+                  {
+                    'AWS':
+                      [
+                        'arn:aws:iam::533267006891:root',
+                        'arn:aws:iam::471112651072:root',
+                        'arn:aws:iam::905418289946:root',
+                        'arn:aws:iam::339713111345:root',
+                      ],
+                  },
+                'Action':
+                  [
+                    'ecr:BatchCheckLayerAvailability',
+                    'ecr:BatchDeleteImage',
+                    'ecr:BatchGetImage',
+                    'ecr:CompleteLayerUpload',
+                    'ecr:DeleteLifecyclePolicy',
+                    'ecr:DeleteRepository',
+                    'ecr:DeleteRepositoryPolicy',
+                    'ecr:DescribeImages',
+                    'ecr:DescribeRepositories',
+                    'ecr:GetDownloadUrlForLayer',
+                    'ecr:GetLifecyclePolicy',
+                    'ecr:GetLifecyclePolicyPreview',
+                    'ecr:GetRepositoryPolicy',
+                    'ecr:InitiateLayerUpload',
+                    'ecr:ListImages',
+                    'ecr:PutImage',
+                    'ecr:PutLifecyclePolicy',
+                    'ecr:SetRepositoryPolicy',
+                    'ecr:StartLifecyclePolicyPreview',
+                    'ecr:UploadLayerPart',
+                  ],
+              },
+            ],
+        }

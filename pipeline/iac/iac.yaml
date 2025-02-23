@@ -1,0 +1,489 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  stage:
+    Type: String
+    AllowedValues:
+      - 'dev'
+      - 'qa'
+      - 'prod'
+    Default: 'dev'
+  Host:
+    Type: String
+  NlbDNS:
+    Type: String
+  AwsRegion:
+    Type: String
+    AllowedValues:
+      - 'us-east-1'
+    Default: 'us-east-1'
+    Description: 'AWS Region where the resources will be created.'
+
+  EcrRepository:
+    Type: String
+    Description: 'The name of the ECR repository.'
+
+  AwsAccountId:
+    Type: String
+    AllowedValues:
+      - '533267006891' # Dev
+      - '905418289946' # QA
+      - '471112651072' # Prod
+    Default: '533267006891'
+    Description: 'AWS Account ID.'
+
+  AwsAccountIdShared:
+    Type: String
+    Default: '533267088375'
+    Description: 'AWS Account ID. Shared'
+
+  VpcId:
+    Type: String
+    AllowedValues:
+      - 'vpc-0501ec03761d02f7f' # dev
+      # - "vpc-XXX" # qa
+      # - "vpc-YYY" # prod
+    Default: 'vpc-0501ec03761d02f7f'
+    Description: 'VPC ID.'
+
+  PrivateSubnetOne:
+    Type: String
+    Description: 'Private Subnet One.'
+    AllowedValues:
+      - 'subnet-0df13b2d204a25e99'
+      # - "" # qa
+      # - "" # prod
+    Default: 'subnet-0df13b2d204a25e99'
+
+  PrivateSubnetTwo:
+    Type: String
+    AllowedValues:
+      - 'subnet-0c4c986950fe6049d'
+      # - "" # qa
+      # - "" # prod
+    Default: 'subnet-0c4c986950fe6049d'
+    Description: 'Private Subnet Two.'
+
+  ServiceSecurityGroup:
+    Type: String
+    Default: sg-043431d1058e118a8
+    Description: 'Service security group.'
+
+  DbOnPremissesSecurityGroup:
+    Type: String
+    Description: 'The security group ID for accessing the on-premises database.'
+    AllowedValues:
+      - 'sg-02e934a30d707bf77' # Dev security group
+      # - 'sg-xxx' # QA
+      # - 'sg-yyy' # Prod
+
+  EcsServiceName:
+    Type: String
+    Description: 'The name of the ECS service.'
+
+  EcsTaskDefinitionFamilyName:
+    Type: String
+    Default: 'poc-coelho'
+    Description: 'The ECS task definition family name.'
+
+  EcsClusterName:
+    Type: String
+    Description: 'The name of the ECS cluster.'
+
+  ContainerName:
+    Type: String
+    Description: 'The name of the container.'
+
+  ContainerImage:
+    Type: String
+    Description: 'The Docker image URL for the container.'
+
+  ContainerMemory:
+    Type: String
+    Default: '512'
+    Description: 'The memory allocation for the container (in MiB).'
+
+  ContainerCPU:
+    Type: String
+    Default: '256'
+    Description: 'The CPU allocation for the container (in CPU units).'
+
+  AwsLogsGroupName:
+    Type: String
+    Default: 'poc-coelho'
+    Description: 'The CloudWatch Logs group name.'
+
+  AwsLogsStreamPrefix:
+    Type: String
+    Default: '/op/ecs-container'
+    Description: 'The prefix for CloudWatch Logs streams.'
+
+  TargetGroupName:
+    Type: String
+    Default: 'tg-poc-coelho'
+    Description: 'The name of the target group.'
+
+  TargetGroupHealthCheckPath:
+    Type: String
+    Default: '/poc-coelho/healthcheck'
+    Description: 'The path for the health check of the target group.'
+
+  ListenerRulePathPattern:
+    Type: String
+    Default: '/poc-coelho/*'
+    Description: 'The path pattern for the listener rule.'
+
+  PortName:
+    Type: String
+    Default: 'poc-coelho-3000-tcp'
+    Description: 'The name of the port.'
+
+  ListenerArn:
+    Type: String
+    Description: 'The ARN of the Application Load Balancer listener.'
+
+  Namespace:
+    Type: String
+    Default: 'siscorp-operational'
+    Description: 'The namespace of the service in the service discovery.'
+
+  DiscoveryName:
+    Type: String
+    Default: 'poc-coelho'
+    Description: 'The name of the service in the service discovery.'
+
+  DnsName:
+    Type: String
+    Default: 'poc-coelho'
+    Description: 'The DNS name of the service.'
+
+  ParameterStoreName:
+    Type: String
+    Description: 'The parameter store name.'
+
+Resources:
+  PocCoelhoParameterPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: PocCoelhoParametersPolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - ssm:PutParameter
+              - ssm:GetParameter
+            Resource:
+              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterStoreName}'
+            Effect: Allow
+ 
+  EcsTaskRole:
+    Type: AWS::IAM::Role
+    DependsOn: PocCoelhoParameterPolicy
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: allow-pull-images-from-private-registry-ecr
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:*
+                Resource: '*'
+        - PolicyName: allow-uploads-logs-in-cloudwatch
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:*
+                Resource: '*'
+      ManagedPolicyArns:
+        - !Sub 'arn:aws:iam::${AwsAccountId}:policy/PocCoelhoParametersPolicy'
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess #Permissão para o X-Ray
+
+  ECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ecs-tasks.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+        - PolicyName: AmazonECSTaskExecutionRolePolicy
+          PolicyDocument:
+            Statement:
+              - Resource: '*'
+                Effect: Allow
+                Action:
+                  # Allow the ECS Tasks to download images from ECR
+                  - 'ecr:*'
+                  # Allow the ECS tasks to upload logs to CloudWatch
+                  - 'logs:*'
+              - Effect: Allow
+                Resource: !Sub arn:aws:ecr:${AwsRegion}:${AwsAccountIdShared}:repository/${EcrRepository}
+                Action:
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:PutImage
+                  - ecr:InitiateLayerUpload
+                  - ecr:UploadLayerPart
+                  - ecr:CompleteLayerUpload
+
+  # TaskDefinitionFargate:
+  #   Type: 'AWS::ECS::TaskDefinition'
+  #   DependsOn:
+  #     - PocCoelhoParameterPolicy
+  #     - EcsTaskRole
+  #   Properties:
+  #     Family: !Ref EcsTaskDefinitionFamilyName
+  #     ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
+  #     TaskRoleArn: !GetAtt EcsTaskRole.Arn
+  #     InferenceAccelerators: []
+  #     PlacementConstraints: []
+  #     RequiresCompatibilities:
+  #       - 'FARGATE'
+  #     NetworkMode: awsvpc
+  #     Memory: !Ref ContainerMemory
+  #     Cpu: !Ref ContainerCPU
+  #     RuntimePlatform:
+  #       OperatingSystemFamily: 'LINUX'
+  #       CpuArchitecture: 'X86_64'
+  #     Volumes: []
+  #     ContainerDefinitions:
+  #       - ExtraHosts: []
+  #         Name: !Ref ContainerName
+  #         Image: !Ref ContainerImage
+  #         Secrets: []
+  #         VolumesFrom: []
+  #         Cpu: 0
+  #         EntryPoint: []
+  #         DnsServers: []
+  #         Essential: true
+  #         LogConfiguration:
+  #           SecretOptions: []
+  #           Options:
+  #             awslogs-create-group: true
+  #             awslogs-region: !Sub '${AWS::Region}'
+  #             awslogs-group: !Ref AwsLogsGroupName
+  #             awslogs-stream-prefix: !Ref AwsLogsStreamPrefix
+  #           LogDriver: 'awslogs'
+  #         ResourceRequirements: []
+  #         EnvironmentFiles: []
+  #         MountPoints: []
+  #         DependsOn: []
+  #         DockerLabels: {}
+  #         PortMappings:
+  #           - ContainerPort: 3000
+  #             AppProtocol: 'http'
+  #             Protocol: 'tcp'
+  #             HostPort: 3000
+  #             Name: !Ref PortName
+  #         DockerSecurityOptions: []
+  #         SystemControls: []
+  #         Command: []
+  #         DnsSearchDomains: []
+  #         Environment: []
+  #         Links: []
+  #         CredentialSpecs: []
+  #         Ulimits: []
+  #     Tags:
+  #       - Value: ''
+  #         Key: 'poc-coelho'
+
+  TaskDefinitionFargate:
+    Type: 'AWS::ECS::TaskDefinition'
+    DependsOn:
+      - PocCoelhoParameterPolicy
+      - EcsTaskRole
+    Properties:
+      Family: !Ref EcsTaskDefinitionFamilyName
+      ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt EcsTaskRole.Arn
+      RequiresCompatibilities:
+        - 'FARGATE'
+      NetworkMode: awsvpc
+      Memory: !Ref ContainerMemory
+      Cpu: !Ref ContainerCPU
+      RuntimePlatform:
+        OperatingSystemFamily: 'LINUX'
+        CpuArchitecture: 'X86_64'
+      Volumes: []
+      ContainerDefinitions:
+        - Name: !Ref ContainerName
+          Image: !Ref ContainerImage
+          Cpu: 0
+          Essential: true
+          LogConfiguration:
+            Options:
+              awslogs-create-group: true
+              awslogs-region: !Sub '${AWS::Region}'
+              awslogs-group: !Ref AwsLogsGroupName
+              awslogs-stream-prefix: !Ref AwsLogsStreamPrefix
+            LogDriver: 'awslogs'
+          PortMappings:
+            - ContainerPort: 3000
+              AppProtocol: 'http'
+              Protocol: 'tcp'
+              HostPort: 3000
+              Name: !Ref PortName
+          Environment:
+            - Name: AWS_XRAY_DAEMON_ADDRESS
+              # Value: "xray-daemon:2000" # Referência ao sidecar do X-Ray
+              Value: "127.0.0.1:2000" #Por rodarem dentro da mesma task definition rodam na mesma rede, por isso localhost
+
+        # AWS X-Ray Daemon como Sidecar
+        - Name: xray-daemon
+          Image: public.ecr.aws/xray/aws-xray-daemon:latest
+          Essential: true
+          Cpu: 128
+          Memory: 256
+          User: "1337" # Requerido no Fargate, recomendado pela AWS
+          PortMappings:
+            - ContainerPort: 2000
+              Protocol: 'udp'
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-create-group: true
+              awslogs-region: !Sub '${AWS::Region}'
+              awslogs-group: !Ref AwsLogsGroupName
+              awslogs-stream-prefix: !Ref AwsLogsStreamPrefix
+          Environment:
+            - Name: AWS_REGION
+              Value: !Sub '${AWS::Region}'
+      Tags:
+        - Key: 'poc-coelho'
+          Value: ''
+        
+      #   # ADOT Collector como Sidecar
+      #   - Name: adot-collector
+      #     Image: public.ecr.aws/aws-observability/aws-otel-collector:latest
+      #     Essential: true
+      #     Memory: 256
+      #     Cpu: 128
+      #     Environment:
+      #       - Name: AWS_REGION
+      #         Value: !Sub '${AWS::Region}'
+      #       - Name: OTEL_EXPORTER_OTLP_ENDPOINT
+      #         Value: "http://localhost:4317"
+      #       - Name: AWS_XRAY_DAEMON_ADDRESS
+      #         Value: "0.0.0.0:2000"
+      #     PortMappings:
+      #       - ContainerPort: 4317
+      #         Protocol: 'tcp'
+      #       - ContainerPort: 4318
+      #         Protocol: 'tcp'
+      #       - ContainerPort: 2000
+      #         Protocol: 'udp'
+      #     LogConfiguration:
+      #       Options:
+      #         awslogs-create-group: true
+      #         awslogs-region: !Sub '${AWS::Region}'
+      #         awslogs-group: !Ref AwsLogsGroupName
+      #         awslogs-stream-prefix: adot
+      #       LogDriver: 'awslogs'
+      # Tags:
+      #   - Value: ''
+      #     Key: 'poc-coelho'
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Ref TargetGroupName
+      HealthCheckPath: !Ref TargetGroupHealthCheckPath
+      Port: 3000
+      Protocol: HTTP
+      TargetType: ip
+      HealthCheckProtocol: HTTP
+      VpcId: !Ref VpcId
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: '30'
+
+  ListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref ListenerArn
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - !Ref ListenerRulePathPattern
+            - !Sub ${stage}/${ListenerRulePathPattern}
+        - Field: host-header
+          Values:
+            - !Ref Host
+            - !Ref NlbDNS
+      Priority: 99
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Ref EcsServiceName
+      Cluster: !Ref EcsClusterName
+      CapacityProviderStrategy:
+        - CapacityProvider: FARGATE
+          Base: 0
+          Weight: 1
+      TaskDefinition: !Ref TaskDefinitionFargate
+      SchedulingStrategy: REPLICA
+      DesiredCount: 1
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !Ref ServiceSecurityGroup
+            - !Ref DbOnPremissesSecurityGroup
+          Subnets:
+            - !Ref PrivateSubnetOne
+            - !Ref PrivateSubnetTwo
+      PlatformVersion: LATEST
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
+      LoadBalancers:
+        - ContainerName: !Ref ContainerName
+          ContainerPort: 3000
+          TargetGroupArn: !Ref TargetGroup
+      DeploymentController:
+        Type: ECS
+      ServiceConnectConfiguration:
+        Enabled: true
+        Namespace: !Sub '${Namespace}-${stage}'
+        Services:
+          - PortName: !Ref PortName
+            DiscoveryName: !Ref DiscoveryName
+            ClientAliases:
+              - Port: '3000'
+                DnsName: !Ref DnsName
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-create-group: true
+            awslogs-region: !Sub '${AWS::Region}'
+            awslogs-group: !Ref AwsLogsGroupName
+            awslogs-stream-prefix: !Ref AwsLogsStreamPrefix
+          SecretOptions: []
+      Tags: []
+      EnableECSManagedTags: true
+
+Outputs:
+  TaskDefinitionArnPocCoelho:
+    Description: 'ARN of the ECS Task Definition'
+    Value: !Ref TaskDefinitionFargate
+    Export:
+      Name: TaskDefinitionArnPocCoelho

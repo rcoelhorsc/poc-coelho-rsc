@@ -1,0 +1,183 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  PocPort:
+    AllowedValues:
+      - '3000'
+    Description: Application's ports.
+    Type: String
+    Default: '3000'
+
+  DNS:
+    Type: String
+
+  stage:
+    Type: String
+    AllowedValues:
+      - "dev"
+      - "qa"
+      - "prod"
+
+  RestApiVpcLink:
+    AllowedValues:
+      - "bhdqyo" # Dev
+    Type: String
+
+  VpcEndpointId:
+    AllowedValues:
+      - "vpce-0c1bef62ca2faad7b" # Dev
+    Description: Vpc endpoint identifier.
+    Type: String
+    Default: vpce-0c1bef62ca2faad7b
+
+Resources:
+
+  RestPocApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: private-poc-oelho
+      Description: Poc Coelho REST API
+      EndpointConfiguration:
+        Types:
+          - PRIVATE
+        VpcEndpointIds:
+          - !Ref VpcEndpointId
+      Policy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action: "execute-api:Invoke"
+            Resource: "arn:aws:execute-api:us-east-1:533267006891:*/*/*/*"
+            Condition:
+              StringEquals:
+                aws:SourceVpce: !Ref VpcEndpointId
+
+  PocApiRootMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestPocApi
+      ResourceId: !GetAtt RestPocApi.RootResourceId
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: "{ \"statusCode\": 200 }"
+        IntegrationResponses:
+          - StatusCode: 200
+      MethodResponses:
+        - StatusCode: 200
+
+  PocApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+         - PocApiRootMethod
+    Properties:
+      RestApiId: !Ref RestPocApi
+      Description: Deployment of public poc coelho routes
+
+  PocApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      DeploymentId: !Ref PocApiDeployment
+      RestApiId: !Ref RestPocApi
+      StageName: !Ref stage
+      Description: Stage of Poc API
+      TracingEnabled: true  # Ativa o X-Ray no API Gateway
+      MethodSettings:
+        - HttpMethod: "*"
+          ResourcePath: "/*"
+          LoggingLevel: INFO
+          MetricsEnabled: true
+          DataTraceEnabled: true
+          ThrottlingRateLimit: 100
+          ThrottlingBurstLimit: 50
+
+    # ==========================
+    # poc-coelho Paths Resources
+    # ==========================
+
+  # Top-Level Resource for /poc-coelho
+  PocCoelhoResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestPocApi
+      ParentId: !GetAtt RestPocApi.RootResourceId
+      PathPart: poc-coelho
+
+  # Top-Level Resource for /poc-coelho/teste
+  PocCoelhoTesteResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestPocApi
+      ParentId: !Ref PocCoelhoResource
+      PathPart: teste
+
+  # GET poc-coelho/teste
+  PocCoelhoTesteResourceGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestPocApi
+      ResourceId: !Ref PocCoelhoTesteResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: HTTP_PROXY
+        Uri: !Sub 'http://${DNS}:${PocPort}/poc-coelho/teste'
+        IntegrationHttpMethod: GET
+        ConnectionType: VPC_LINK
+        ConnectionId: !Ref RestApiVpcLink
+      MethodResponses:
+        - StatusCode: '200'
+
+  #POST /poc-coelho/teste
+  PocCoelhoTesteResourcePostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestPocApi
+      ResourceId: !Ref PocCoelhoTesteResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: HTTP_PROXY
+        Uri: !Sub 'http://${DNS}:${PocPort}/poc-coelho/teste'
+        IntegrationHttpMethod: POST
+        ConnectionType: VPC_LINK
+        ConnectionId: !Ref RestApiVpcLink
+      MethodResponses:
+        - StatusCode: '201'
+
+  # Top-Level Resource for /poc-coelho/advice
+  PocCoelhoAdviceResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestPocApi
+      ParentId: !Ref PocCoelhoResource
+      PathPart: advice
+
+  # GET poc-coelho/advice
+  PocCoelhoAdviceResourceGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestPocApi
+      ResourceId: !Ref PocCoelhoAdviceResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: HTTP_PROXY
+        Uri: !Sub 'http://${DNS}:${PocPort}/poc-coelho/advice'
+        IntegrationHttpMethod: GET
+        ConnectionType: VPC_LINK
+        ConnectionId: !Ref RestApiVpcLink
+      MethodResponses:
+        - StatusCode: '200'
+
+
+# Outputs:
+#   RootResourceId:
+#     Description: 'Root resource ID'
+#     Value: !GetAtt RestOmnichannelApi.RootResourceId
+#   RestAPIId:
+#     Description: 'API ID'
+#     Value: !Ref RestOmnichannelApi

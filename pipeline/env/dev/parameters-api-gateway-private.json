@@ -1,0 +1,6 @@
+{
+  "stage": "dev",
+  "DNS": "siscorp-nlb-private-42a628e4d481cee3.elb.us-east-1.amazonaws.com",
+  "RestApiVpcLink": "bhdqyo",
+  "VpcEndpointId": "vpce-0c1bef62ca2faad7b"
+}

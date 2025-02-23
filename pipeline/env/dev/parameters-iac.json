@@ -1,0 +1,16 @@
+{
+  "VpcId": "vpc-0501ec03761d02f7f",
+  "PrivateSubnetOne": "subnet-0df13b2d204a25e99",
+  "PrivateSubnetTwo": "subnet-0c4c986950fe6049d",
+  "ServiceSecurityGroup": "sg-043431d1058e118a8",
+  "DbOnPremissesSecurityGroup": "sg-02e934a30d707bf77",
+  "ContainerName": "poc-coelho",
+  "ContainerMemory": 512,
+  "ContainerCPU": 256,
+  "ListenerArn": "arn:aws:elasticloadbalancing:us-east-1:533267006891:listener/app/siscorp-alb-private/e6ac4889b9a804ba/3da7f28774eb0a33",
+  "EcsClusterName": "siscorp-operational-dev",
+  "EcsServiceName": "poc-coelho",
+  "roleOIDC": "arn:aws:iam::533267006891:role/GitHubAction-AssumeRoleWithAction",
+  "Host": "siscorp-operacional-omnichannel-api-dev.lwsa.tech",
+  "NlbDNS": "siscorp-nlb-private-42a628e4d481cee3.elb.us-east-1.amazonaws.com"
+}
