@@ -1,0 +1,14 @@
+services:
+  api:
+    networks:
+      - my-networks
+    build:
+      dockerfile: Dockerfile
+      context: .
+      target: development
+    command: npm run start
+    ports:
+      - 3000:3000
+networks:
+  my-networks:
+    driver: bridge
