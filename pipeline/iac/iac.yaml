@@ -125,7 +125,7 @@ Parameters:
 
   TargetGroupHealthCheckPath:
     Type: String
-    Default: '/poc-coelho/healthcheck'
+    Default: '/poc-coelho-rsc/health'
     Description: 'The path for the health check of the target group.'
 
   ListenerRulePathPattern:
