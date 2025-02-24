@@ -12,8 +12,8 @@ export class PocController {
     private readonly logger: Logger // Injetando o Logger
   ) {}
 
-  // Rota: "GET /health"
-  @Get('health')
+  // Rota: "GET /healthcheck"
+  @Get('healthcheck')
   getHealth(@Res() res: Response) {
     return res.status(HttpStatus.OK).send('Healthy!');
   }
