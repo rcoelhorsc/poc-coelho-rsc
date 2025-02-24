@@ -351,7 +351,7 @@ Resources:
             - "-c"
             - |
               aws s3 cp s3://op-rules-xray/sampling-rules.json /etc/sampling-rules.json || echo "{}" > /etc/sampling-rules.json
-              exec my-app-start-command # Substitua pelo comando correto da sua aplicação
+              exec node dist/main.js
               
         # AWS X-Ray Daemon como Sidecar
         - Name: xray-daemon
