@@ -181,43 +181,6 @@ Resources:
     Properties:
       BucketName: "op-rules-xray"
 
-  XRaySamplingRules:
-    Type: "AWS::S3::Object"
-    Properties:
-      Bucket: !Ref XRaySamplingBucket
-      Key: "sampling-rules.json"
-      ContentType: "application/json"
-      Content: |
-        {
-          "version": 2,
-          "rules": [
-            {
-              "description": "Ignore health check",
-              "host": "*",
-              "http_method": "*",
-              "url_path": "/poc-coelho/healthcheck*",
-              "fixed_target": 0,
-              "rate": 0.0
-            },
-            {
-              "description": "Ignore health check",
-              "host": "*",
-              "http_method": "*",
-              "url_path": "/customer/health-check/liveness*",
-              "fixed_target": 0,
-              "rate": 0.0
-            },            
-            {
-              "description": "Default rule",
-              "host": "*",
-              "http_method": "*",
-              "url_path": "*",
-              "fixed_target": 1,
-              "rate": 0.1
-            }
-          ]
-        }
-
   EcsTaskRole:
     Type: AWS::IAM::Role
     DependsOn: PocCoelhoParameterPolicy
