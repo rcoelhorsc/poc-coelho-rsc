@@ -75,7 +75,7 @@ jobs:
         uses: aws-actions/aws-cloudformation-github-deploy@v1.2.0
         with:
           name: poc-coelho-bucket-s3
-          template: pipeline/iac/iac-s3.yml
+          template: pipeline/iac/iac-s3.yaml
           capabilities: CAPABILITY_NAMED_IAM
           no-fail-on-empty-changeset: 1
 
