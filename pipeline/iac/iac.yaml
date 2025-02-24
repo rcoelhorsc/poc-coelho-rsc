@@ -350,16 +350,16 @@ Resources:
               Protocol: 'tcp'
               HostPort: 3000
               Name: !Ref PortName
-          Environment:
-            - Name: AWS_XRAY_DAEMON_ADDRESS
-              # Value: "xray-daemon:2000" # Referência ao sidecar do X-Ray
-              Value: "127.0.0.1:2000" #Por rodarem dentro da mesma task definition rodam na mesma rede, por isso localhost
-          Command:
-            - "/bin/sh"
-            - "-c"
-            - |
-              aws s3 cp s3://op-rules-xray/sampling-rules.json /etc/sampling-rules.json || echo "{}" > /etc/sampling-rules.json
-              exec node dist/main.js
+          # Environment:
+          #   - Name: AWS_XRAY_DAEMON_ADDRESS
+          #     # Value: "xray-daemon:2000" # Referência ao sidecar do X-Ray
+          #     Value: "127.0.0.1:2000" #Por rodarem dentro da mesma task definition rodam na mesma rede, por isso localhost
+          # Command:
+          #   - "/bin/sh"
+          #   - "-c"
+          #   - |
+          #     aws s3 cp s3://op-rules-xray/sampling-rules.json /etc/sampling-rules.json || echo "{}" > /etc/sampling-rules.json
+          #     exec node dist/main.js
               
         # AWS X-Ray Daemon como Sidecar
         - Name: xray-daemon
@@ -381,10 +381,10 @@ Resources:
           Environment:
             - Name: AWS_REGION
               Value: !Sub '${AWS::Region}'
-            - Name: AWS_XRAY_SAMPLING_RULE_MANIFEST
-              Value: "/etc/sampling-rules.json"              
-            - Name: AWS_XRAY_DAEMON_NO_IMDS  # 🔥 ESSA LINHA AQUI 🔥
-              Value: "TRUE"
+            # - Name: AWS_XRAY_SAMPLING_RULE_MANIFEST
+            #   Value: "/etc/sampling-rules.json"              
+            # - Name: AWS_XRAY_DAEMON_NO_IMDS  # 🔥 ESSA LINHA AQUI 🔥
+            #   Value: "TRUE"
 
 
             # - Name: AWS_XRAY_SAMPLING_RULE_MANIFEST
