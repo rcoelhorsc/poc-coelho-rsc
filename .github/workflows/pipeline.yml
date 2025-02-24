@@ -1,276 +1,276 @@
-name: Deploy to Amazon ECS - POC Coelho
+# name: Deploy to Amazon ECS - POC Coelho
 
-on:
-  push:
-    branches:
-      - 'main'
+# on:
+#   push:
+#     branches:
+#       - 'main'
 
-env:
-  ECR_REPOSITORY: poc-coelho
-  IAC_ECR_STACK_NAME: poc-coelho-ecr
-  IAC_APP_STACK_NAME: poc-coelho
-  IAC_ECR: pipeline/iac/iac_ecr.yaml
-  IAC_APP: pipeline/iac/iac.yaml
-  PATH_PARAMETER_IAC: pipeline/env/dev/parameters-iac.json
-  AWS_ACCOUNT_ID_SHARED: 533267088375
-  AWS_REGION: us-east-1
-  AUDIENCE_OIDC: sts.amazonaws.com
-  ROLE_OIDC_ACCOUNT_SHARED: arn:aws:iam::533267088375:role/GitHubAction-AssumeRoleWithAction
+# env:
+#   ECR_REPOSITORY: poc-coelho
+#   IAC_ECR_STACK_NAME: poc-coelho-ecr
+#   IAC_APP_STACK_NAME: poc-coelho
+#   IAC_ECR: pipeline/iac/iac_ecr.yaml
+#   IAC_APP: pipeline/iac/iac.yaml
+#   PATH_PARAMETER_IAC: pipeline/env/dev/parameters-iac.json
+#   AWS_ACCOUNT_ID_SHARED: 533267088375
+#   AWS_REGION: us-east-1
+#   AUDIENCE_OIDC: sts.amazonaws.com
+#   ROLE_OIDC_ACCOUNT_SHARED: arn:aws:iam::533267088375:role/GitHubAction-AssumeRoleWithAction
 
-permissions:
-  id-token: write
-  contents: read
+# permissions:
+#   id-token: write
+#   contents: read
 
-jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+# jobs:
+#   build-and-test:
+#     runs-on: ubuntu-latest
 
-    outputs:
-      AUTH_TOKEN: ${{ steps.codeartifact-auth-token.outputs.AUTH_TOKEN }}
+#     outputs:
+#       AUTH_TOKEN: ${{ steps.codeartifact-auth-token.outputs.AUTH_TOKEN }}
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v3
 
-      - name: Install dependencies
-        run: npm install
+#       - name: Install dependencies
+#         run: npm install
 
-      # - name: Run lint
-      #   run: npm run lint
+#       # - name: Run lint
+#       #   run: npm run lint
 
-      #  - name: Run tests with Jest
-      #    run: npm run test -- --coverage
-      #    continue-on-error: false
+#       #  - name: Run tests with Jest
+#       #    run: npm run test -- --coverage
+#       #    continue-on-error: false
 
-      # # Verificar uma forma de exportar o relatório dos testes, mesmo quando ocorrer no step acima (Run tests with Jest)
-      # # Pois quando ocorre erro, o JOB para e não segue para o step abaixo
-      # # Se colocar "continue-on-error: true", o relatório é exportado, porém segue para os próximos jobs e deveria brekar a pipe
-      - name: Upload test report as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-report
-          path: coverage/lcov-report/index.html
+#       # # Verificar uma forma de exportar o relatório dos testes, mesmo quando ocorrer no step acima (Run tests with Jest)
+#       # # Pois quando ocorre erro, o JOB para e não segue para o step abaixo
+#       # # Se colocar "continue-on-error: true", o relatório é exportado, porém segue para os próximos jobs e deveria brekar a pipe
+#       - name: Upload test report as artifact
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: test-report
+#           path: coverage/lcov-report/index.html
 
-  deploy-cloudformation-ecr:
-    runs-on: ubuntu-latest
+#   deploy-cloudformation-ecr:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v4
 
-      - name: Configure aws credentials (OpenID Connect)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          audience: ${{ env.AUDIENCE_OIDC }}
-          role-to-assume: ${{ env.ROLE_OIDC_ACCOUNT_SHARED }}
-          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+#       - name: Configure aws credentials (OpenID Connect)
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-region: ${{ env.AWS_REGION }}
+#           audience: ${{ env.AUDIENCE_OIDC }}
+#           role-to-assume: ${{ env.ROLE_OIDC_ACCOUNT_SHARED }}
+#           role-session-name: GitHub_to_AWS_via_FederatedOIDC
 
-      - name: Deploy CloudFormation Stack - ECR
-        id: deploy-cloudformation-repo
-        uses: aws-actions/aws-cloudformation-github-deploy@v1.2.0
-        with:
-          name: ${{ env.IAC_ECR_STACK_NAME }}
-          template: ${{ env.IAC_ECR }}
-          capabilities: CAPABILITY_NAMED_IAM
-          no-fail-on-empty-changeset: 1
-          parameter-overrides: |
-            EcrRepositoryName=${{ env.ECR_REPOSITORY }}
+#       - name: Deploy CloudFormation Stack - ECR
+#         id: deploy-cloudformation-repo
+#         uses: aws-actions/aws-cloudformation-github-deploy@v1.2.0
+#         with:
+#           name: ${{ env.IAC_ECR_STACK_NAME }}
+#           template: ${{ env.IAC_ECR }}
+#           capabilities: CAPABILITY_NAMED_IAM
+#           no-fail-on-empty-changeset: 1
+#           parameter-overrides: |
+#             EcrRepositoryName=${{ env.ECR_REPOSITORY }}
 
-  build-and-push-image:
-    runs-on: ubuntu-latest
-    needs: [build-and-test, deploy-cloudformation-ecr]
+#   build-and-push-image:
+#     runs-on: ubuntu-latest
+#     needs: [build-and-test, deploy-cloudformation-ecr]
 
-    outputs:
-      IMAGE_URI: ${{ steps.image-tags.outputs.IMAGE_URI }}
+#     outputs:
+#       IMAGE_URI: ${{ steps.image-tags.outputs.IMAGE_URI }}
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v3
 
-      - name: Configure aws credentials (OpenID Connect)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          audience: ${{ env.AUDIENCE_OIDC }}
-          role-to-assume: ${{ env.ROLE_OIDC_ACCOUNT_SHARED }}
-          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+#       - name: Configure aws credentials (OpenID Connect)
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-region: ${{ env.AWS_REGION }}
+#           audience: ${{ env.AUDIENCE_OIDC }}
+#           role-to-assume: ${{ env.ROLE_OIDC_ACCOUNT_SHARED }}
+#           role-session-name: GitHub_to_AWS_via_FederatedOIDC
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-        with:
-          mask-password: 'false'
+#       - name: Login to Amazon ECR
+#         id: login-ecr
+#         uses: aws-actions/amazon-ecr-login@v2
+#         with:
+#           mask-password: 'false'
 
-      - name: Set REPOSITORY_URI
-        id: set-repository-uri
-        run: |
-          REPOSITORY_URI="${{ env.AWS_ACCOUNT_ID_SHARED }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${ECR_REPOSITORY}"
-          echo "REPOSITORY_URI=$REPOSITORY_URI" >> $GITHUB_ENV
-          echo "REPOSITORY_URI value: $REPOSITORY_URI"
+#       - name: Set REPOSITORY_URI
+#         id: set-repository-uri
+#         run: |
+#           REPOSITORY_URI="${{ env.AWS_ACCOUNT_ID_SHARED }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${ECR_REPOSITORY}"
+#           echo "REPOSITORY_URI=$REPOSITORY_URI" >> $GITHUB_ENV
+#           echo "REPOSITORY_URI value: $REPOSITORY_URI"
 
-      - name: Define Image Tags
-        id: image-tags
-        run: |
-          TAG=$(echo $GITHUB_SHA | head -c 8)
-          IMAGE_URI_LATEST="${REPOSITORY_URI}:latest"
-          IMAGE_URI="${REPOSITORY_URI}:${TAG}"
-          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
-          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_OUTPUT
-          echo "IMAGE_URI_LATEST=$IMAGE_URI_LATEST" >> $GITHUB_ENV
+#       - name: Define Image Tags
+#         id: image-tags
+#         run: |
+#           TAG=$(echo $GITHUB_SHA | head -c 8)
+#           IMAGE_URI_LATEST="${REPOSITORY_URI}:latest"
+#           IMAGE_URI="${REPOSITORY_URI}:${TAG}"
+#           echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+#           echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_OUTPUT
+#           echo "IMAGE_URI_LATEST=$IMAGE_URI_LATEST" >> $GITHUB_ENV
 
-      - name: Retrieve CODEARTIFACT_AUTH_TOKEN
-        run: |
-          echo "CODEARTIFACT_AUTH_TOKEN: ${{ needs.build-and-test.outputs.auth_token }}"
+#       - name: Retrieve CODEARTIFACT_AUTH_TOKEN
+#         run: |
+#           echo "CODEARTIFACT_AUTH_TOKEN: ${{ needs.build-and-test.outputs.auth_token }}"
 
-      - name: Build Docker Image
-        run: |
-          docker build --build-arg CODEARTIFACT_AUTH_TOKEN=${{ needs.build-and-test.outputs.AUTH_TOKEN }} \
-            --tag "$IMAGE_URI_LATEST" .
-          docker build --build-arg CODEARTIFACT_AUTH_TOKEN=${{ needs.build-and-test.outputs.AUTH_TOKEN }} \
-            --tag "$IMAGE_URI" .
+#       - name: Build Docker Image
+#         run: |
+#           docker build --build-arg CODEARTIFACT_AUTH_TOKEN=${{ needs.build-and-test.outputs.AUTH_TOKEN }} \
+#             --tag "$IMAGE_URI_LATEST" .
+#           docker build --build-arg CODEARTIFACT_AUTH_TOKEN=${{ needs.build-and-test.outputs.AUTH_TOKEN }} \
+#             --tag "$IMAGE_URI" .
 
-      - name: Push Docker Image to ECR
-        id: push-image
-        run: |
-          docker push "$IMAGE_URI_LATEST"
-          docker push "$IMAGE_URI"
+#       - name: Push Docker Image to ECR
+#         id: push-image
+#         run: |
+#           docker push "$IMAGE_URI_LATEST"
+#           docker push "$IMAGE_URI"
 
-  deploy-dev:
-    if: |
-      github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    needs: build-and-push-image
-    environment: dev
+#   deploy-dev:
+#     if: |
+#       github.ref == 'refs/heads/main'
+#     runs-on: ubuntu-latest
+#     needs: build-and-push-image
+#     environment: dev
 
-    env:
-      PATH_PARAMETER_IAC: pipeline/env/dev/parameters-iac.json
-      PATH_PARAMETER_APP: pipeline/env/dev/parameters.json
-      PATH_PARAMETER_PUBLIC_API: pipeline/env/dev/parameters-api-gateway-public.json
+#     env:
+#       PATH_PARAMETER_IAC: pipeline/env/dev/parameters-iac.json
+#       PATH_PARAMETER_APP: pipeline/env/dev/parameters.json
+#       PATH_PARAMETER_PUBLIC_API: pipeline/env/dev/parameters-api-gateway-public.json
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v4
 
-      - name: Set environment variables IAC from JSON
-        run: |
-          # Definindo uma lista de variáveis e os campos correspondentes no JSON
-          declare -A variables
-          variables=(
-            ["VPC_ID"]=".VpcId"
-            ["PRIVATE_SUBNET_ONE"]=".PrivateSubnetOne"
-            ["PRIVATE_SUBNET_TWO"]=".PrivateSubnetTwo"
-            ["SERVICE_SECURITY_GROUP"]=".ServiceSecurityGroup"
-            ["DB_ON_PREMISSE_SECURITY_GROUP"]=".DbOnPremissesSecurityGroup"
-            ["CONTAINER_NAME"]=".ContainerName"
-            ["CONTAINER_MEMORY"]=".ContainerMemory"
-            ["CONTAINER_CPU"]=".ContainerCPU"
-            ["LISTENER_ARN"]=".ListenerArn"
-            ["ECS_CLUSTER"]=".EcsClusterName"
-            ["ECS_SERVICE"]=".EcsServiceName"
-            ["PARAMETER_STORE"]=".ParameterStore"
-            ["ROLE_OIDC"]=".roleOIDC"
-            ["HOST"]=".Host"
-            ["NLB_DNS"]=".NlbDNS"
-          )
+#       - name: Set environment variables IAC from JSON
+#         run: |
+#           # Definindo uma lista de variáveis e os campos correspondentes no JSON
+#           declare -A variables
+#           variables=(
+#             ["VPC_ID"]=".VpcId"
+#             ["PRIVATE_SUBNET_ONE"]=".PrivateSubnetOne"
+#             ["PRIVATE_SUBNET_TWO"]=".PrivateSubnetTwo"
+#             ["SERVICE_SECURITY_GROUP"]=".ServiceSecurityGroup"
+#             ["DB_ON_PREMISSE_SECURITY_GROUP"]=".DbOnPremissesSecurityGroup"
+#             ["CONTAINER_NAME"]=".ContainerName"
+#             ["CONTAINER_MEMORY"]=".ContainerMemory"
+#             ["CONTAINER_CPU"]=".ContainerCPU"
+#             ["LISTENER_ARN"]=".ListenerArn"
+#             ["ECS_CLUSTER"]=".EcsClusterName"
+#             ["ECS_SERVICE"]=".EcsServiceName"
+#             ["PARAMETER_STORE"]=".ParameterStore"
+#             ["ROLE_OIDC"]=".roleOIDC"
+#             ["HOST"]=".Host"
+#             ["NLB_DNS"]=".NlbDNS"
+#           )
 
-          for var in "${!variables[@]}"; do
-            value=$(jq -r "${variables[$var]}" $PATH_PARAMETER_IAC)
-            echo "$var=$value" >> $GITHUB_ENV
-          done
+#           for var in "${!variables[@]}"; do
+#             value=$(jq -r "${variables[$var]}" $PATH_PARAMETER_IAC)
+#             echo "$var=$value" >> $GITHUB_ENV
+#           done
 
-      - name: Configure aws credentials (OpenID Connect)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          audience: ${{ env.AUDIENCE_OIDC }}
-          role-to-assume: ${{ env.ROLE_OIDC }}
-          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+#       - name: Configure aws credentials (OpenID Connect)
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-region: ${{ env.AWS_REGION }}
+#           audience: ${{ env.AUDIENCE_OIDC }}
+#           role-to-assume: ${{ env.ROLE_OIDC }}
+#           role-session-name: GitHub_to_AWS_via_FederatedOIDC
 
-      - name: Set environment variables IAC from JSON for Private AG
-        run: |
-          # Definindo uma lista de variáveis e os campos correspondentes no JSON
-          declare -A variables
-          variables=(
-            ["STAGE"]=".stage"
-            ["DNS"]=".DNS"
-            ["REST_API_VPC_LINK"]=".RestApiVpcLink"
-            ["VPC_ENDPOINT_ID"]=".VpcEndpointId"
-          )
+#       - name: Set environment variables IAC from JSON for Private AG
+#         run: |
+#           # Definindo uma lista de variáveis e os campos correspondentes no JSON
+#           declare -A variables
+#           variables=(
+#             ["STAGE"]=".stage"
+#             ["DNS"]=".DNS"
+#             ["REST_API_VPC_LINK"]=".RestApiVpcLink"
+#             ["VPC_ENDPOINT_ID"]=".VpcEndpointId"
+#           )
 
-          for var in "${!variables[@]}"; do
-            value=$(jq -r "${variables[$var]}" pipeline/env/dev/parameters-api-gateway-private.json)
-            echo "$var=$value" >> $GITHUB_ENV
-          done
+#           for var in "${!variables[@]}"; do
+#             value=$(jq -r "${variables[$var]}" pipeline/env/dev/parameters-api-gateway-private.json)
+#             echo "$var=$value" >> $GITHUB_ENV
+#           done
 
 
-      - name: Deploy Private CloudFormation Stack
-        id: poc-coelho-private-ag
-        uses: aws-actions/aws-cloudformation-github-deploy@v1.2.0
-        with:
-          name: poc-coelho-private-ag
-          template: pipeline/iac/iac-api-gateway-private.yml
-          capabilities: CAPABILITY_NAMED_IAM
-          no-fail-on-empty-changeset: 1
-          parameter-overrides: |
-            DNS=${{ env.DNS }},
-            RestApiVpcLink=${{ env.REST_API_VPC_LINK }},
-            stage=${{ env.STAGE}},
-            VpcEndpointId=${{ env.VPC_ENDPOINT_ID}}
+#       - name: Deploy Private CloudFormation Stack
+#         id: poc-coelho-private-ag
+#         uses: aws-actions/aws-cloudformation-github-deploy@v1.2.0
+#         with:
+#           name: poc-coelho-private-ag
+#           template: pipeline/iac/iac-api-gateway-private.yml
+#           capabilities: CAPABILITY_NAMED_IAM
+#           no-fail-on-empty-changeset: 1
+#           parameter-overrides: |
+#             DNS=${{ env.DNS }},
+#             RestApiVpcLink=${{ env.REST_API_VPC_LINK }},
+#             stage=${{ env.STAGE}},
+#             VpcEndpointId=${{ env.VPC_ENDPOINT_ID}}
 
-      - name: Set environment variables IAC from API Gateway Public JSON
-        run: |
-          # Definindo uma lista de variáveis e os campos correspondentes no JSON
-          declare -A variables
-          variables=(
-            ["STAGE"]=".stage"
-            ["DNS"]=".DNS"
-            ["REST_API_VPC_LINK"]=".RestApiVpcLink"
-          )
+#       - name: Set environment variables IAC from API Gateway Public JSON
+#         run: |
+#           # Definindo uma lista de variáveis e os campos correspondentes no JSON
+#           declare -A variables
+#           variables=(
+#             ["STAGE"]=".stage"
+#             ["DNS"]=".DNS"
+#             ["REST_API_VPC_LINK"]=".RestApiVpcLink"
+#           )
 
-          for var in "${!variables[@]}"; do
-            value=$(jq -r "${variables[$var]}" $PATH_PARAMETER_PUBLIC_API)
-            echo "$var=$value" >> $GITHUB_ENV
-          done
+#           for var in "${!variables[@]}"; do
+#             value=$(jq -r "${variables[$var]}" $PATH_PARAMETER_PUBLIC_API)
+#             echo "$var=$value" >> $GITHUB_ENV
+#           done
 
-      - name: Deploy CloudFormation Stack - Public API Gateway
-        id: deploy-cloudformation-ag-pbc
-        uses: aws-actions/aws-cloudformation-github-deploy@v1.2.0
-        with:
-          name: poc-coelho-public-ag
-          template: pipeline/iac/iac-api-gateway-public.yaml
-          capabilities: CAPABILITY_NAMED_IAM
-          no-fail-on-empty-changeset: 1
-          parameter-overrides: |
-            DNS=${{ env.DNS }},
-            RestApiVpcLink=${{ env.REST_API_VPC_LINK }},
-            stage=${{ env.STAGE}}
+#       - name: Deploy CloudFormation Stack - Public API Gateway
+#         id: deploy-cloudformation-ag-pbc
+#         uses: aws-actions/aws-cloudformation-github-deploy@v1.2.0
+#         with:
+#           name: poc-coelho-public-ag
+#           template: pipeline/iac/iac-api-gateway-public.yaml
+#           capabilities: CAPABILITY_NAMED_IAM
+#           no-fail-on-empty-changeset: 1
+#           parameter-overrides: |
+#             DNS=${{ env.DNS }},
+#             RestApiVpcLink=${{ env.REST_API_VPC_LINK }},
+#             stage=${{ env.STAGE}}
 
-      - name: Deploy CloudFormation Stack - ECS
-        id: deploy-cloudformation
-        uses: aws-actions/aws-cloudformation-github-deploy@v1.2.0
-        with:
-          name: ${{ env.IAC_APP_STACK_NAME }}
-          template: ${{ env.IAC_APP }}
-          capabilities: CAPABILITY_NAMED_IAM
-          no-fail-on-empty-changeset: 1
-          parameter-overrides: |
-            stage=dev,
-            AwsRegion=${{ env.AWS_REGION }},
-            AwsAccountIdShared=${{ env.AWS_ACCOUNT_ID_SHARED }},
-            VpcId=${{ env.VPC_ID }},
-            PrivateSubnetOne=${{ env.PRIVATE_SUBNET_ONE }},
-            PrivateSubnetTwo=${{ env.PRIVATE_SUBNET_TWO }},
-            ServiceSecurityGroup=${{ env.SERVICE_SECURITY_GROUP }},
-            DbOnPremissesSecurityGroup=${{ env.DB_ON_PREMISSE_SECURITY_GROUP }},
-            ContainerName=${{ env.CONTAINER_NAME }},
-            ContainerMemory=${{ env.CONTAINER_MEMORY }},
-            ContainerCPU=${{ env.CONTAINER_CPU }},
-            EcrRepository=${{ env.ECR_REPOSITORY }},
-            ContainerImage=${{ needs.build-and-push-image.outputs.IMAGE_URI }},
-            ListenerArn=${{ env.LISTENER_ARN }},
-            EcsClusterName=${{ env.ECS_CLUSTER }},
-            EcsServiceName=${{ env.ECS_SERVICE }},
-            ParameterStoreName=${{ env.PARAMETER_STORE }},
-            Host=${{ env.HOST }},
-            NlbDNS=${{ env.NLB_DNS }}
+#       - name: Deploy CloudFormation Stack - ECS
+#         id: deploy-cloudformation
+#         uses: aws-actions/aws-cloudformation-github-deploy@v1.2.0
+#         with:
+#           name: ${{ env.IAC_APP_STACK_NAME }}
+#           template: ${{ env.IAC_APP }}
+#           capabilities: CAPABILITY_NAMED_IAM
+#           no-fail-on-empty-changeset: 1
+#           parameter-overrides: |
+#             stage=dev,
+#             AwsRegion=${{ env.AWS_REGION }},
+#             AwsAccountIdShared=${{ env.AWS_ACCOUNT_ID_SHARED }},
+#             VpcId=${{ env.VPC_ID }},
+#             PrivateSubnetOne=${{ env.PRIVATE_SUBNET_ONE }},
+#             PrivateSubnetTwo=${{ env.PRIVATE_SUBNET_TWO }},
+#             ServiceSecurityGroup=${{ env.SERVICE_SECURITY_GROUP }},
+#             DbOnPremissesSecurityGroup=${{ env.DB_ON_PREMISSE_SECURITY_GROUP }},
+#             ContainerName=${{ env.CONTAINER_NAME }},
+#             ContainerMemory=${{ env.CONTAINER_MEMORY }},
+#             ContainerCPU=${{ env.CONTAINER_CPU }},
+#             EcrRepository=${{ env.ECR_REPOSITORY }},
+#             ContainerImage=${{ needs.build-and-push-image.outputs.IMAGE_URI }},
+#             ListenerArn=${{ env.LISTENER_ARN }},
+#             EcsClusterName=${{ env.ECS_CLUSTER }},
+#             EcsServiceName=${{ env.ECS_SERVICE }},
+#             ParameterStoreName=${{ env.PARAMETER_STORE }},
+#             Host=${{ env.HOST }},
+#             NlbDNS=${{ env.NLB_DNS }}
