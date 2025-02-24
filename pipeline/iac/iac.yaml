@@ -361,28 +361,28 @@ Resources:
             - Name: AWS_REGION
               Value: !Sub '${AWS::Region}'
             - Name: AWS_XRAY_SAMPLING_RULE_MANIFEST
-                      Value: |
-                        {
-                          "version": 2,
-                          "rules": [
-                            {
-                              "description": "Ignore health check",
-                              "host": "*",
-                              "http_method": "*",
-                              "url_path": "/poc-coelho/healthcheck",
-                              "fixed_target": 0,
-                              "rate": 0.0
-                            },
-                            {
-                              "description": "Default rule",
-                              "host": "*",
-                              "http_method": "*",
-                              "url_path": "*",
-                              "fixed_target": 1,
-                              "rate": 0.1
-                            }
-                          ]
-                        }              
+              Value: |
+                {
+                  "version": 2,
+                  "rules": [
+                    {
+                      "description": "Ignore health check",
+                      "host": "*",
+                      "http_method": "*",
+                      "url_path": "/poc-coelho/healthcheck",
+                      "fixed_target": 0,
+                      "rate": 0.0
+                    },
+                    {
+                      "description": "Default rule",
+                      "host": "*",
+                      "http_method": "*",
+                      "url_path": "*",
+                      "fixed_target": 1,
+                      "rate": 0.1
+                    }
+                  ]
+                }              
       Tags:
         - Key: 'poc-coelho'
           Value: ''
