@@ -290,12 +290,6 @@ Resources:
               Protocol: 'tcp'
               HostPort: 3000
               Name: !Ref PortName
-          Command:
-            - "/bin/sh"
-            - "-c"
-            - |
-              aws s3 cp s3://op-rules-xray/sampling-rules.json /etc/sampling-rules.json || echo "{}" > /etc/sampling-rules.json
-              exec node dist/main.js
 
         # AWS X-Ray Daemon como Sidecar
         - Name: xray-daemon
@@ -318,9 +312,7 @@ Resources:
             - Name: AWS_REGION
               Value: !Sub '${AWS::Region}'
             - Name: AWS_XRAY_DAEMON_NO_IMDS
-              Value: "TRUE"
-            - Name: AWS_XRAY_SAMPLING_RULE_MANIFEST
-              Value: "/etc/sampling-rules.json"  # Caminho do arquivo no contêiner           
+              Value: "TRUE"          
       Tags:
         - Key: 'poc-coelho'
           Value: ''

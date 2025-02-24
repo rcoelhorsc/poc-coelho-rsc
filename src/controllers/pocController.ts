@@ -15,6 +15,12 @@ export class PocController {
   // Rota: "GET /healthcheck"
   @Get('healthcheck')
   getHealth(@Res() res: Response) {
+
+    const segment = AWSXRay.getSegment(); // Obtém o segmento atual
+    if (segment) {
+      segment.close(); // Fecha o trace imediatamente para essa requisição
+    }
+    
     return res.status(HttpStatus.OK).send('Healthy!');
   }
 
