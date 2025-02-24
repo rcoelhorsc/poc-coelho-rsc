@@ -253,174 +253,74 @@ Resources:
                   - ecr:UploadLayerPart
                   - ecr:CompleteLayerUpload
 
-  # TaskDefinitionFargate:
-  #   Type: 'AWS::ECS::TaskDefinition'
-  #   DependsOn:
-  #     - PocCoelhoParameterPolicy
-  #     - EcsTaskRole
-  #   Properties:
-  #     Family: !Ref EcsTaskDefinitionFamilyName
-  #     ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
-  #     TaskRoleArn: !GetAtt EcsTaskRole.Arn
-  #     InferenceAccelerators: []
-  #     PlacementConstraints: []
-  #     RequiresCompatibilities:
-  #       - 'FARGATE'
-  #     NetworkMode: awsvpc
-  #     Memory: !Ref ContainerMemory
-  #     Cpu: !Ref ContainerCPU
-  #     RuntimePlatform:
-  #       OperatingSystemFamily: 'LINUX'
-  #       CpuArchitecture: 'X86_64'
-  #     Volumes: []
-  #     ContainerDefinitions:
-  #       - ExtraHosts: []
-  #         Name: !Ref ContainerName
-  #         Image: !Ref ContainerImage
-  #         Secrets: []
-  #         VolumesFrom: []
-  #         Cpu: 0
-  #         EntryPoint: []
-  #         DnsServers: []
-  #         Essential: true
-  #         LogConfiguration:
-  #           SecretOptions: []
-  #           Options:
-  #             awslogs-create-group: true
-  #             awslogs-region: !Sub '${AWS::Region}'
-  #             awslogs-group: !Ref AwsLogsGroupName
-  #             awslogs-stream-prefix: !Ref AwsLogsStreamPrefix
-  #           LogDriver: 'awslogs'
-  #         ResourceRequirements: []
-  #         EnvironmentFiles: []
-  #         MountPoints: []
-  #         DependsOn: []
-  #         DockerLabels: {}
-  #         PortMappings:
-  #           - ContainerPort: 3000
-  #             AppProtocol: 'http'
-  #             Protocol: 'tcp'
-  #             HostPort: 3000
-  #             Name: !Ref PortName
-  #         DockerSecurityOptions: []
-  #         SystemControls: []
-  #         Command: []
-  #         DnsSearchDomains: []
-  #         Environment: []
-  #         Links: []
-  #         CredentialSpecs: []
-  #         Ulimits: []
-  #     Tags:
-  #       - Value: ''
-  #         Key: 'poc-coelho'
 
-    TaskDefinitionFargate:
-      Type: 'AWS::ECS::TaskDefinition'
-      DependsOn:
-        - PocCoelhoParameterPolicy
-        - EcsTaskRole
-      Properties:
-        Family: !Ref EcsTaskDefinitionFamilyName
-        ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
-        TaskRoleArn: !GetAtt EcsTaskRole.Arn
-        RequiresCompatibilities:
-          - 'FARGATE'
-        NetworkMode: awsvpc
-        Memory: !Ref ContainerMemory
-        Cpu: !Ref ContainerCPU
-        RuntimePlatform:
-          OperatingSystemFamily: 'LINUX'
-          CpuArchitecture: 'X86_64'
-        Volumes: []
-        ContainerDefinitions:
-          - Name: !Ref ContainerName
-            Image: !Ref ContainerImage
-            Cpu: 0
-            Essential: true
-            LogConfiguration:
-              Options:
-                awslogs-create-group: true
-                awslogs-region: !Sub '${AWS::Region}'
-                awslogs-group: !Ref AwsLogsGroupName
-                awslogs-stream-prefix: !Ref AwsLogsStreamPrefix
-              LogDriver: 'awslogs'
-            PortMappings:
-              - ContainerPort: 3000
-                AppProtocol: 'http'
-                Protocol: 'tcp'
-                HostPort: 3000
-                Name: !Ref PortName
-            # Environment:
-            #   - Name: AWS_XRAY_DAEMON_ADDRESS
-            #     # Value: "xray-daemon:2000" # Referência ao sidecar do X-Ray
-            #     Value: "127.0.0.1:2000" #Por rodarem dentro da mesma task definition rodam na mesma rede, por isso localhost
-            # Command:
-            #   - "/bin/sh"
-            #   - "-c"
-            #   - |
-            #     aws s3 cp s3://op-rules-xray/sampling-rules.json /etc/sampling-rules.json || echo "{}" > /etc/sampling-rules.json
-            #     exec node dist/main.js
-            Command:
-              - "/bin/sh"
-              - "-c"
-              - |
-                # Baixar o arquivo de regras de amostragem do S3 para dentro do contêiner
-                aws s3 cp s3://op-rules-xray/sampling-rules.json /etc/sampling-rules.json || echo "{}" > /etc/sampling-rules.json
-                # Rodar a aplicação depois de garantir que as regras estejam no contêiner
-                exec node dist/main.js
-                
-          # AWS X-Ray Daemon como Sidecar
-          - Name: xray-daemon
-            Image: public.ecr.aws/xray/aws-xray-daemon:latest
-            Essential: true
-            Cpu: 128
-            Memory: 256
-            User: "1337" # Requerido no Fargate, recomendado pela AWS
-            PortMappings:
-              - ContainerPort: 2000
-                Protocol: 'udp'
-            LogConfiguration:
-              LogDriver: 'awslogs'
-              Options:
-                awslogs-create-group: true
-                awslogs-region: !Sub '${AWS::Region}'
-                awslogs-group: !Ref AwsLogsGroupName
-                awslogs-stream-prefix: !Ref AwsLogsStreamPrefix   
-            Environment:
-              - Name: AWS_REGION
-                Value: !Sub '${AWS::Region}'
-              - Name: AWS_XRAY_DAEMON_NO_IMDS
-                Value: "TRUE"
-              - Name: AWS_XRAY_SAMPLING_RULE_MANIFEST
-                Value: "/etc/sampling-rules.json"  # Caminho do arquivo no contêiner
-            MountPoints:
-              - SourceVolume: xray-sampling-rules
-                ContainerPath: /etc/sampling-rules.json  # Local onde o arquivo será montado no contêiner
-                ReadOnly: true
+  TaskDefinitionFargate:
+    Type: 'AWS::ECS::TaskDefinition'
+    DependsOn:
+      - PocCoelhoParameterPolicy
+      - EcsTaskRole
+    Properties:
+      Family: !Ref EcsTaskDefinitionFamilyName
+      ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt EcsTaskRole.Arn
+      RequiresCompatibilities:
+        - 'FARGATE'
+      NetworkMode: awsvpc
+      Memory: !Ref ContainerMemory
+      Cpu: !Ref ContainerCPU
+      RuntimePlatform:
+        OperatingSystemFamily: 'LINUX'
+        CpuArchitecture: 'X86_64'
+      Volumes: []  # Removido o volume, já que o arquivo virá do S3
+      ContainerDefinitions:
+        - Name: !Ref ContainerName
+          Image: !Ref ContainerImage
+          Cpu: 0
+          Essential: true
+          LogConfiguration:
+            Options:
+              awslogs-create-group: true
+              awslogs-region: !Sub '${AWS::Region}'
+              awslogs-group: !Ref AwsLogsGroupName
+              awslogs-stream-prefix: !Ref AwsLogsStreamPrefix
+            LogDriver: 'awslogs'
+          PortMappings:
+            - ContainerPort: 3000
+              AppProtocol: 'http'
+              Protocol: 'tcp'
+              HostPort: 3000
+              Name: !Ref PortName
+          Command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              aws s3 cp s3://op-rules-xray/sampling-rules.json /etc/sampling-rules.json || echo "{}" > /etc/sampling-rules.json
+              exec node dist/main.js
 
-            # - Name: AWS_XRAY_SAMPLING_RULE_MANIFEST
-            #   Value: |
-            #     {
-            #       "version": 2,
-            #       "rules": [
-            #         {
-            #           "description": "Ignore health check",
-            #           "host": "*",
-            #           "http_method": "*",
-            #           "url_path": "/poc-coelho/healthcheck",
-            #           "fixed_target": 0,
-            #           "rate": 0.0
-            #         },
-            #         {
-            #           "description": "Default rule",
-            #           "host": "*",
-            #           "http_method": "*",
-            #           "url_path": "*",
-            #           "fixed_target": 1,
-            #           "rate": 0.1
-            #         }
-            #       ]
-            #     }              
+        # AWS X-Ray Daemon como Sidecar
+        - Name: xray-daemon
+          Image: public.ecr.aws/xray/aws-xray-daemon:latest
+          Essential: true
+          Cpu: 128
+          Memory: 256
+          User: "1337" # Requerido no Fargate, recomendado pela AWS
+          PortMappings:
+            - ContainerPort: 2000
+              Protocol: 'udp'
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-create-group: true
+              awslogs-region: !Sub '${AWS::Region}'
+              awslogs-group: !Ref AwsLogsGroupName
+              awslogs-stream-prefix: !Ref AwsLogsStreamPrefix   
+          Environment:
+            - Name: AWS_REGION
+              Value: !Sub '${AWS::Region}'
+            - Name: AWS_XRAY_DAEMON_NO_IMDS
+              Value: "TRUE"
+            - Name: AWS_XRAY_SAMPLING_RULE_MANIFEST
+              Value: "/etc/sampling-rules.json"  # Caminho do arquivo no contêiner           
       Tags:
         - Key: 'poc-coelho'
           Value: ''
