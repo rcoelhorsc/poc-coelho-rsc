@@ -6,13 +6,6 @@ on:
       - 'main'
 
 env:
-  ECR_REPOSITORY: poc-coelho
-  IAC_ECR_STACK_NAME: poc-coelho-ecr
-  IAC_APP_STACK_NAME: poc-coelho
-  IAC_ECR: pipeline/iac/iac_ecr.yaml
-  IAC_APP: pipeline/iac/iac.yaml
-  PATH_PARAMETER_IAC: pipeline/env/dev/parameters-iac.json
-  AWS_ACCOUNT_ID_SHARED: 533267088375
   AWS_REGION: us-east-1
   AUDIENCE_OIDC: sts.amazonaws.com
   ROLE_OIDC_ACCOUNT_SHARED: arn:aws:iam::533267088375:role/GitHubAction-AssumeRoleWithAction
@@ -53,9 +46,7 @@ jobs:
           no-fail-on-empty-changeset: 1
 
       - name: Check if the sampling-rules.json file exists
-        run: |
-          PATH_PARAMETER_S3="path/to/sampling-rules.json"  # Altere para o caminho correto do seu arquivo
-          
+        run: |         
           if [ ! -f "$PATH_PARAMETER_S3" ]; then
             echo "Erro: O arquivo não encontrado no caminho especificado: $PATH_PARAMETER_S3" >&2
             exit 1
