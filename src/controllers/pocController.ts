@@ -18,8 +18,10 @@ export class PocController {
 
     const segment = AWSXRay.getSegment(); // Obtém o segmento atual
     if (segment) {
+      this.logger.info('#### Segmento do X-Ray encerrado ####')
       segment.close(); // Fecha o trace imediatamente para essa requisição
     }
+    this.logger.info('#### Segmento do X-Ray mantido ####')
     
     return res.status(HttpStatus.OK).send('Healthy!');
   }
