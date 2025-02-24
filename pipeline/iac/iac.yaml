@@ -207,7 +207,15 @@ Resources:
               - Effect: Allow
                 Action:
                   - s3:GetObject
-                Resource: arn:aws:s3:::op-rules-xray/sampling-rules.json                
+                Resource: arn:aws:s3:::op-rules-xray/sampling-rules.json
+        - PolicyName: allow-xray-tracing
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                Resource: "*"                
       ManagedPolicyArns:
         - !Sub 'arn:aws:iam::${AwsAccountId}:policy/PocCoelhoParametersPolicy'
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
