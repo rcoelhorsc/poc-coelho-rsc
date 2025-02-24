@@ -146,9 +146,7 @@ jobs:
     env:
       PATH_PARAMETER_IAC: pipeline/env/dev/parameters-iac.json
       PATH_PARAMETER_APP: pipeline/env/dev/parameters.json
-      PATH_PARAMETER_XRAY: pipeline/env/dev/sampling-rules.json
       PATH_PARAMETER_PUBLIC_API: pipeline/env/dev/parameters-api-gateway-public.json
-      S3_BUCKET: op-rules-xray
 
     steps:
       - name: Checkout Code
@@ -204,6 +202,7 @@ jobs:
             value=$(jq -r "${variables[$var]}" pipeline/env/dev/parameters-api-gateway-private.json)
             echo "$var=$value" >> $GITHUB_ENV
           done
+
 
       - name: Deploy Private CloudFormation Stack
         id: poc-coelho-private-ag
@@ -275,12 +274,3 @@ jobs:
             ParameterStoreName=${{ env.PARAMETER_STORE }},
             Host=${{ env.HOST }},
             NlbDNS=${{ env.NLB_DNS }}
-
-      - name: Upload sampling-rules.json to S3
-        run: |
-          if [ ! -f "$PATH_PARAMETER_XRAY" ]; then
-            echo "Erro: O arquivo não encontrado no caminho especificado: $PATH_PARAMETER_XRAY" >&2
-            exit 1
-          fi
-          aws s3 cp "$PATH_PARAMETER_XRAY" "s3://$S3_BUCKET/sampling-rules.json" --region us-east-1
-          echo "Arquivo sampling-rules.json enviado para o bucket S3 com sucesso."            

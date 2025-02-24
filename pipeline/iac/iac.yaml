@@ -176,11 +176,6 @@ Resources:
               - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterStoreName}'
             Effect: Allow
  
-  XRaySamplingBucket:
-    Type: "AWS::S3::Bucket"
-    Properties:
-      BucketName: "op-rules-xray"
-
   EcsTaskRole:
     Type: AWS::IAM::Role
     DependsOn: PocCoelhoParameterPolicy
@@ -206,14 +201,6 @@ Resources:
                 Action:
                   - logs:*
                 Resource: '*'
-        - PolicyName: "XRayReadSamplingRules"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: "Allow"
-                Action:
-                  - "s3:GetObject"
-                Resource: !Sub "arn:aws:s3:::${XRaySamplingBucket}/sampling-rules.json"                
       ManagedPolicyArns:
         - !Sub 'arn:aws:iam::${AwsAccountId}:policy/PocCoelhoParametersPolicy'
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
@@ -373,34 +360,29 @@ Resources:
           Environment:
             - Name: AWS_REGION
               Value: !Sub '${AWS::Region}'
-          EntryPoint: ["/bin/sh", "-c"]
-          Command:
-            - |
-              aws s3 cp s3://op-rules-xray/sampling-rules.json /etc/sampling-rules.json
-              /usr/bin/xray -o -f /etc/sampling-rules.json              
-            # - Name: AWS_XRAY_SAMPLING_RULE_MANIFEST
-            #   Value: |
-            #     {
-            #       "version": 2,
-            #       "rules": [
-            #         {
-            #           "description": "Ignore health check",
-            #           "host": "*",
-            #           "http_method": "*",
-            #           "url_path": "/poc-coelho/healthcheck",
-            #           "fixed_target": 0,
-            #           "rate": 0.0
-            #         },
-            #         {
-            #           "description": "Default rule",
-            #           "host": "*",
-            #           "http_method": "*",
-            #           "url_path": "*",
-            #           "fixed_target": 1,
-            #           "rate": 0.1
-            #         }
-            #       ]
-            #     }              
+            - Name: AWS_XRAY_SAMPLING_RULE_MANIFEST
+              Value: |
+                {
+                  "version": 2,
+                  "rules": [
+                    {
+                      "description": "Ignore health check",
+                      "host": "*",
+                      "http_method": "*",
+                      "url_path": "/poc-coelho/healthcheck",
+                      "fixed_target": 0,
+                      "rate": 0.0
+                    },
+                    {
+                      "description": "Default rule",
+                      "host": "*",
+                      "http_method": "*",
+                      "url_path": "*",
+                      "fixed_target": 1,
+                      "rate": 0.1
+                    }
+                  ]
+                }              
       Tags:
         - Key: 'poc-coelho'
           Value: ''
