@@ -6,6 +6,13 @@ on:
       - 'main'
 
 env:
+  ECR_REPOSITORY: poc-coelho
+  IAC_ECR_STACK_NAME: poc-coelho-ecr
+  IAC_APP_STACK_NAME: poc-coelho
+  IAC_ECR: pipeline/iac/iac_ecr.yaml
+  IAC_APP: pipeline/iac/iac.yaml
+  PATH_PARAMETER_IAC: pipeline/env/dev/parameters-iac.json
+  AWS_ACCOUNT_ID_SHARED: 533267088375
   AWS_REGION: us-east-1
   AUDIENCE_OIDC: sts.amazonaws.com
   ROLE_OIDC_ACCOUNT_SHARED: arn:aws:iam::533267088375:role/GitHubAction-AssumeRoleWithAction
@@ -28,6 +35,33 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Set environment variables IAC from JSON
+        run: |
+          # Definindo uma lista de variáveis e os campos correspondentes no JSON
+          declare -A variables
+          variables=(
+            ["VPC_ID"]=".VpcId"
+            ["PRIVATE_SUBNET_ONE"]=".PrivateSubnetOne"
+            ["PRIVATE_SUBNET_TWO"]=".PrivateSubnetTwo"
+            ["SERVICE_SECURITY_GROUP"]=".ServiceSecurityGroup"
+            ["DB_ON_PREMISSE_SECURITY_GROUP"]=".DbOnPremissesSecurityGroup"
+            ["CONTAINER_NAME"]=".ContainerName"
+            ["CONTAINER_MEMORY"]=".ContainerMemory"
+            ["CONTAINER_CPU"]=".ContainerCPU"
+            ["LISTENER_ARN"]=".ListenerArn"
+            ["ECS_CLUSTER"]=".EcsClusterName"
+            ["ECS_SERVICE"]=".EcsServiceName"
+            ["PARAMETER_STORE"]=".ParameterStore"
+            ["ROLE_OIDC"]=".roleOIDC"
+            ["HOST"]=".Host"
+            ["NLB_DNS"]=".NlbDNS"
+          )
+
+          for var in "${!variables[@]}"; do
+            value=$(jq -r "${variables[$var]}" $PATH_PARAMETER_IAC)
+            echo "$var=$value" >> $GITHUB_ENV
+          done
+
       - name: Configure aws credentials (OpenID Connect)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -46,7 +80,9 @@ jobs:
           no-fail-on-empty-changeset: 1
 
       - name: Check if the sampling-rules.json file exists
-        run: |         
+        run: |
+          PATH_PARAMETER_S3="path/to/sampling-rules.json"  # Altere para o caminho correto do seu arquivo
+          
           if [ ! -f "$PATH_PARAMETER_S3" ]; then
             echo "Erro: O arquivo não encontrado no caminho especificado: $PATH_PARAMETER_S3" >&2
             exit 1
