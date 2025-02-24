@@ -12,7 +12,7 @@ async function bootstrap() {
   app.use(AWSXRay.express.openSegment('poc-coelho'));
 
   // Define o prefixo global de todas as rotas
-  app.setGlobalPrefix('poc-coelho-rsc');
+  app.setGlobalPrefix('poc-coelho');
 
   await app.listen(process.env.PORT ?? 3000);
 

@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/node:18.16-alpine3.18 as development
+FROM public.ecr.aws/docker/library/node:18.16-alpine3.18 AS development
 
 WORKDIR /usr/src/app
 
