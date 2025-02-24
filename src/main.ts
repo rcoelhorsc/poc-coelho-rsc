@@ -9,7 +9,7 @@ async function bootstrap() {
 
   AWSXRay.captureHTTPsGlobal(http);
   AWSXRay.captureHTTPsGlobal(https);
-  app.use(AWSXRay.express.openSegment('poc-coelho-rsc'));
+  app.use(AWSXRay.express.openSegment('poc-coelho'));
 
   // Define o prefixo global de todas as rotas
   app.setGlobalPrefix('poc-coelho-rsc');
