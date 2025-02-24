@@ -383,7 +383,8 @@ Resources:
               Value: !Sub '${AWS::Region}'
             - Name: AWS_XRAY_SAMPLING_RULE_MANIFEST
               Value: "/etc/sampling-rules.json"              
-
+            - Name: AWS_XRAY_DAEMON_NO_IMDS  # 🔥 ESSA LINHA AQUI 🔥
+              Value: "TRUE"
 
 
             # - Name: AWS_XRAY_SAMPLING_RULE_MANIFEST
