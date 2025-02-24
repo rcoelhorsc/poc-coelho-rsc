@@ -10,14 +10,6 @@ async function bootstrap() {
   AWSXRay.captureHTTPsGlobal(http);
   AWSXRay.captureHTTPsGlobal(https);
 
-  app.use((req, res, next) => {
-    if (req.path === '/poc-coelho/healthcheck') {
-      res.setHeader('X-Ray-Trace-Skipped', 'true');
-      return next();
-    }
-    next();
-  });
-
   app.use(AWSXRay.express.openSegment('poc-coelho'));
 
   // Define o prefixo global de todas as rotas
