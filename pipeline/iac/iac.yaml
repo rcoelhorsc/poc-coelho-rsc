@@ -346,7 +346,13 @@ Resources:
             - Name: AWS_XRAY_DAEMON_ADDRESS
               # Value: "xray-daemon:2000" # Referência ao sidecar do X-Ray
               Value: "127.0.0.1:2000" #Por rodarem dentro da mesma task definition rodam na mesma rede, por isso localhost
-
+          Command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              aws s3 cp s3://op-rules-xray/sampling-rules.json /etc/sampling-rules.json || echo "{}" > /etc/sampling-rules.json
+              exec my-app-start-command # Substitua pelo comando correto da sua aplicação
+              
         # AWS X-Ray Daemon como Sidecar
         - Name: xray-daemon
           Image: public.ecr.aws/xray/aws-xray-daemon:latest
@@ -363,13 +369,14 @@ Resources:
               awslogs-create-group: true
               awslogs-region: !Sub '${AWS::Region}'
               awslogs-group: !Ref AwsLogsGroupName
-              awslogs-stream-prefix: !Ref AwsLogsStreamPrefix
+              awslogs-stream-prefix: !Ref AwsLogsStreamPrefix   
           Environment:
             - Name: AWS_REGION
               Value: !Sub '${AWS::Region}'
-          EntryPoint: ["/bin/sh", "-c"]
-          Command:
-            - aws s3 cp s3://op-rules-xray/sampling-rules.json /etc/sampling-rules.json; /usr/bin/xray -o -f /etc/sampling-rules.json
+            - Name: AWS_XRAY_SAMPLING_RULE_MANIFEST
+              Value: "/etc/sampling-rules.json"              
+
+
 
             # - Name: AWS_XRAY_SAMPLING_RULE_MANIFEST
             #   Value: |
