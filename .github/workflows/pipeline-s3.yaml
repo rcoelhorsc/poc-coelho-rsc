@@ -1,96 +1,96 @@
-name: Deploy to Amazon ECS - POC Coelho
+# name: Deploy to Amazon ECS - POC Coelho
 
-on:
-  push:
-    branches:
-      - 'main'
+# on:
+#   push:
+#     branches:
+#       - 'main'
 
-env:
-  ECR_REPOSITORY: poc-coelho
-  IAC_ECR_STACK_NAME: poc-coelho-ecr
-  IAC_APP_STACK_NAME: poc-coelho
-  IAC_ECR: pipeline/iac/iac_ecr.yaml
-  IAC_APP: pipeline/iac/iac.yaml
-  PATH_PARAMETER_IAC: pipeline/env/dev/parameters-iac.json
-  AWS_ACCOUNT_ID_SHARED: 533267088375
-  AWS_REGION: us-east-1
-  AUDIENCE_OIDC: sts.amazonaws.com
-  ROLE_OIDC_ACCOUNT_SHARED: arn:aws:iam::533267088375:role/GitHubAction-AssumeRoleWithAction
+# env:
+#   ECR_REPOSITORY: poc-coelho
+#   IAC_ECR_STACK_NAME: poc-coelho-ecr
+#   IAC_APP_STACK_NAME: poc-coelho
+#   IAC_ECR: pipeline/iac/iac_ecr.yaml
+#   IAC_APP: pipeline/iac/iac.yaml
+#   PATH_PARAMETER_IAC: pipeline/env/dev/parameters-iac.json
+#   AWS_ACCOUNT_ID_SHARED: 533267088375
+#   AWS_REGION: us-east-1
+#   AUDIENCE_OIDC: sts.amazonaws.com
+#   ROLE_OIDC_ACCOUNT_SHARED: arn:aws:iam::533267088375:role/GitHubAction-AssumeRoleWithAction
 
-permissions:
-  id-token: write
-  contents: read
+# permissions:
+#   id-token: write
+#   contents: read
 
-jobs:
-  deploy-dev:
-    if: |
-      github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    environment: dev
+# jobs:
+#   deploy-dev:
+#     if: |
+#       github.ref == 'refs/heads/main'
+#     runs-on: ubuntu-latest
+#     environment: dev
 
-    env:
-      PATH_PARAMETER_S3: pipeline/env/dev/sampling-rules.json
+#     env:
+#       PATH_PARAMETER_S3: pipeline/env/dev/sampling-rules.json
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v4
 
-      - name: Set environment variables IAC from JSON
-        run: |
-          # Definindo uma lista de variáveis e os campos correspondentes no JSON
-          declare -A variables
-          variables=(
-            ["VPC_ID"]=".VpcId"
-            ["PRIVATE_SUBNET_ONE"]=".PrivateSubnetOne"
-            ["PRIVATE_SUBNET_TWO"]=".PrivateSubnetTwo"
-            ["SERVICE_SECURITY_GROUP"]=".ServiceSecurityGroup"
-            ["DB_ON_PREMISSE_SECURITY_GROUP"]=".DbOnPremissesSecurityGroup"
-            ["CONTAINER_NAME"]=".ContainerName"
-            ["CONTAINER_MEMORY"]=".ContainerMemory"
-            ["CONTAINER_CPU"]=".ContainerCPU"
-            ["LISTENER_ARN"]=".ListenerArn"
-            ["ECS_CLUSTER"]=".EcsClusterName"
-            ["ECS_SERVICE"]=".EcsServiceName"
-            ["PARAMETER_STORE"]=".ParameterStore"
-            ["ROLE_OIDC"]=".roleOIDC"
-            ["HOST"]=".Host"
-            ["NLB_DNS"]=".NlbDNS"
-          )
+#       - name: Set environment variables IAC from JSON
+#         run: |
+#           # Definindo uma lista de variáveis e os campos correspondentes no JSON
+#           declare -A variables
+#           variables=(
+#             ["VPC_ID"]=".VpcId"
+#             ["PRIVATE_SUBNET_ONE"]=".PrivateSubnetOne"
+#             ["PRIVATE_SUBNET_TWO"]=".PrivateSubnetTwo"
+#             ["SERVICE_SECURITY_GROUP"]=".ServiceSecurityGroup"
+#             ["DB_ON_PREMISSE_SECURITY_GROUP"]=".DbOnPremissesSecurityGroup"
+#             ["CONTAINER_NAME"]=".ContainerName"
+#             ["CONTAINER_MEMORY"]=".ContainerMemory"
+#             ["CONTAINER_CPU"]=".ContainerCPU"
+#             ["LISTENER_ARN"]=".ListenerArn"
+#             ["ECS_CLUSTER"]=".EcsClusterName"
+#             ["ECS_SERVICE"]=".EcsServiceName"
+#             ["PARAMETER_STORE"]=".ParameterStore"
+#             ["ROLE_OIDC"]=".roleOIDC"
+#             ["HOST"]=".Host"
+#             ["NLB_DNS"]=".NlbDNS"
+#           )
 
-          for var in "${!variables[@]}"; do
-            value=$(jq -r "${variables[$var]}" $PATH_PARAMETER_IAC)
-            echo "$var=$value" >> $GITHUB_ENV
-          done
+#           for var in "${!variables[@]}"; do
+#             value=$(jq -r "${variables[$var]}" $PATH_PARAMETER_IAC)
+#             echo "$var=$value" >> $GITHUB_ENV
+#           done
 
-      - name: Configure aws credentials (OpenID Connect)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          audience: ${{ env.AUDIENCE_OIDC }}
-          role-to-assume: ${{ env.ROLE_OIDC }}
-          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+#       - name: Configure aws credentials (OpenID Connect)
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-region: ${{ env.AWS_REGION }}
+#           audience: ${{ env.AUDIENCE_OIDC }}
+#           role-to-assume: ${{ env.ROLE_OIDC }}
+#           role-session-name: GitHub_to_AWS_via_FederatedOIDC
 
-      - name: Deploy Private CloudFormation Stack
-        id: poc-coelho-bucket-s3
-        uses: aws-actions/aws-cloudformation-github-deploy@v1.2.0
-        with:
-          name: poc-coelho-bucket-s3
-          template: pipeline/iac/iac-s3.yaml
-          capabilities: CAPABILITY_NAMED_IAM
-          no-fail-on-empty-changeset: 1
+#       - name: Deploy Private CloudFormation Stack
+#         id: poc-coelho-bucket-s3
+#         uses: aws-actions/aws-cloudformation-github-deploy@v1.2.0
+#         with:
+#           name: poc-coelho-bucket-s3
+#           template: pipeline/iac/iac-s3.yaml
+#           capabilities: CAPABILITY_NAMED_IAM
+#           no-fail-on-empty-changeset: 1
 
-      - name: Check if the sampling-rules.json file exists
-        run: |         
-          if [ ! -f "$PATH_PARAMETER_S3" ]; then
-            echo "Erro: O arquivo não encontrado no caminho especificado: $PATH_PARAMETER_S3" >&2
-            exit 1
-          fi
-          echo "Arquivo encontrado: $PATH_PARAMETER_S3"
+#       - name: Check if the sampling-rules.json file exists
+#         run: |         
+#           if [ ! -f "$PATH_PARAMETER_S3" ]; then
+#             echo "Erro: O arquivo não encontrado no caminho especificado: $PATH_PARAMETER_S3" >&2
+#             exit 1
+#           fi
+#           echo "Arquivo encontrado: $PATH_PARAMETER_S3"
 
-      - name: Upload sampling-rules.json to S3
-        run: |
-          S3_BUCKET="op-rules-xray"
+#       - name: Upload sampling-rules.json to S3
+#         run: |
+#           S3_BUCKET="op-rules-xray"
           
-          # Fazendo o upload do arquivo para o S3
-          aws s3 cp "$PATH_PARAMETER_S3" "s3://$S3_BUCKET/sampling-rules.json" --region us-east-1
-          echo "Arquivo sampling-rules.json enviado para o bucket S3 com sucesso."          
+#           # Fazendo o upload do arquivo para o S3
+#           aws s3 cp "$PATH_PARAMETER_S3" "s3://$S3_BUCKET/sampling-rules.json" --region us-east-1
+#           echo "Arquivo sampling-rules.json enviado para o bucket S3 com sucesso."          
