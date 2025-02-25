@@ -20,7 +20,7 @@ export class PocService {
   async getAdviceService() {
     try {
       const segment: any = AWSXRay.getSegment();
-      this.logger.info('## Log do segmento do X-Ray obtido dentro da rota GET /advice', { // Usando o logger injetado
+      this.logger.info('## Log do segmento do X-Ray obtido dentro da service GET /advice', { // Usando o logger injetado
         requestId: segment?.id,
         traceId: segment?.trace_id,
       });
@@ -35,8 +35,12 @@ export class PocService {
 
       // Mapeando os dados da resposta para o DTO
       const adviceDto = mapToAdviceDto(response.data);
-
-      this.logger.info('Conselho obtido com sucesso', { advice: adviceDto.advice }); // Usando o logger injetado
+      console.log('Segment');
+      console.log(segment);
+      this.logger.info('Conselho obtido com sucesso', { 
+        requestId: segment?.id,
+        traceId: segment?.trace_id,        
+        advice: adviceDto.advice }); // Usando o logger injetado
 
       return adviceDto;
     } catch (error) {
