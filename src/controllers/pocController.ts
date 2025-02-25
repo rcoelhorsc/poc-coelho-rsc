@@ -16,11 +16,11 @@ export class PocController {
   @Get('healthcheck')
   getHealth(@Res() res: Response) {
 
-    const segment: any = AWSXRay.getSegment();
-    this.logger.info('## Log do segmento do X-Ray obtido dentro da rota GET /teste', {
-      requestId: segment?.id,
-      traceId: segment?.trace_id,
-    });
+    // const segment: any = AWSXRay.getSegment();
+    // this.logger.info('## Log do segmento do X-Ray obtido dentro da rota GET /teste', {
+    //   requestId: segment?.id,
+    //   traceId: segment?.trace_id,
+    // });
     
     this.logger.info('Dentro da rota GET /healthcheck')
 
@@ -35,6 +35,8 @@ export class PocController {
       requestId: segment?.id,
       traceId: segment?.trace_id,
     });
+
+    this.logger.info('Dentro da rota GET /teste')
 
     return res.json({ message: 'Teste POC Coelho!!!' });
   }
@@ -63,6 +65,8 @@ export class PocController {
 
       const data = await this.pocService.getAdviceService();
       return res.json({ data });
+
+      // return res.json({ message: 'Teste ADVICE Coelho!!!' });
     } catch (error) {
       this.logger.error('Erro ao processar a requisição de conselho', { error: error.message });
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Erro ao obter o conselho' });

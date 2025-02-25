@@ -25,6 +25,8 @@ export class PocService {
         traceId: segment?.trace_id,
       });
 
+      this.logger.info('Dentro da service getAdviceService')
+
       // Realizando a chamada HTTP para a API externa
       const response = await axios.get('https://api.adviceslip.com/advice');
 
@@ -35,12 +37,7 @@ export class PocService {
 
       // Mapeando os dados da resposta para o DTO
       const adviceDto = mapToAdviceDto(response.data);
-      console.log('Segment');
-      console.log(segment);
-      this.logger.info('Conselho obtido com sucesso', { 
-        requestId: segment?.id,
-        traceId: segment?.trace_id,        
-        advice: adviceDto.advice }); // Usando o logger injetado
+      this.logger.info('Conselho obtido com sucesso', { advice: adviceDto.advice }); // Usando o logger injetado
 
       return adviceDto;
     } catch (error) {
