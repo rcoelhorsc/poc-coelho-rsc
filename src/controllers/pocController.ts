@@ -16,13 +16,14 @@ export class PocController {
   @Get('healthcheck')
   getHealth(@Res() res: Response) {
 
-    // const segment = AWSXRay.getSegment(); // Obtém o segmento atual
-    // if (segment) {
-    //   this.logger.info('#### Segmento do X-Ray encerrado ####')
-    //   segment.close(); // Fecha o trace imediatamente para essa requisição
-    // }
-    // this.logger.info('#### Segmento do X-Ray mantido ####')
+    const segment: any = AWSXRay.getSegment();
+    this.logger.info('## Log do segmento do X-Ray obtido dentro da rota GET /teste', {
+      requestId: segment?.id,
+      traceId: segment?.trace_id,
+    });
     
+    this.logger.info('Dentro da rota GET /healthcheck')
+
     return res.status(HttpStatus.OK).send('Healthy!');
   }
 
