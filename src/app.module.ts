@@ -9,8 +9,18 @@ import { XRayMiddleware } from './middleware/xRayIgnore.middleware'
   providers: [PocService, Logger],
 })
 
-export class AppModule implements NestModule{
+// export class AppModule implements NestModule{
+//   configure(consumer: MiddlewareConsumer) {
+//     consumer
+//       .apply(XRayMiddleware.withSegmentName('poc-coelho'))
+//       .forRoutes('*');
+//   }
+// }
+
+export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply( XRayMiddleware).forRoutes('*');
+    consumer
+      .apply(XRayMiddleware.bind(null, 'poc-coelho')) // Passa o nome do segmento diretamente
+      .forRoutes('*');
   }
 }
