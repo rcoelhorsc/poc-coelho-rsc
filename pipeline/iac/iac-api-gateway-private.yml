@@ -130,7 +130,7 @@ Resources:
         ConnectionId: !Ref RestApiVpcLink
         PassthroughBehavior: WHEN_NO_TEMPLATES
         RequestParameters:
-          integration.request.header.request_id: "'$context.requestId'"        
+          integration.request.header.request_id: context.requestId        
       MethodResponses:
         - StatusCode: '200'
 
@@ -150,7 +150,7 @@ Resources:
         ConnectionId: !Ref RestApiVpcLink            
         PassthroughBehavior: WHEN_NO_TEMPLATES
         RequestParameters:
-          integration.request.header.request_id: "'$context.requestId'"            
+          integration.request.header.request_id: context.requestId            
       MethodResponses:
         - StatusCode: '201'
 
@@ -178,7 +178,7 @@ Resources:
         ConnectionId: !Ref RestApiVpcLink           
         PassthroughBehavior: WHEN_NO_TEMPLATES
         RequestParameters:
-          integration.request.header.request_id: "'$context.requestId'"            
+          integration.request.header.request_id: context.requestId            
       MethodResponses:
         - StatusCode: '200'
 
