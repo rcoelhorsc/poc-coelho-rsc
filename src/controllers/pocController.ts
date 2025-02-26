@@ -15,12 +15,7 @@ export class PocController {
   // Rota: "GET /healthcheck"
   @Get('healthcheck')
   getHealth(@Req() req: Request, @Res() res: Response) {
-    const requestId = req.headers['requestId']
-    const segment: any = AWSXRay.getSegment();
-    this.logger.info('## Log do segmento do X-Ray obtido dentro da rota GET /teste', {
-      requestId: requestId,
-      traceId: segment?.trace_id,
-    });
+    this.logger.info('## Log do segmento do X-Ray obtido dentro da rota GET /teste');
 
     return res.status(HttpStatus.OK).send('Healthy!');
   }
@@ -29,12 +24,9 @@ export class PocController {
   @Get('teste')
   getTeste(@Req() req: Request, @Res() res: Response) {
     const requestId = req.get('request_id');
-    const segment: any = AWSXRay.getSegment();  
+    // const segment: any = AWSXRay.getSegment();  
 
-    this.logger.info('## Log do segmento do X-Ray obtido dentro da rota GET /teste', {
-      requestId: requestId,
-      traceId: segment?.trace_id,
-    });
+    this.logger.info('## Log do segmento do X-Ray obtido dentro da rota GET /teste');
 
     return res.json({ message: 'Teste POC Coelho!!!', requestId });
   }
@@ -43,12 +35,7 @@ export class PocController {
   @Post('teste')
   postTeste(@Body() body: any, @Req() req: Request, @Res() res: Response) {
     try {
-      const requestId = req.get('request_id');
-      const segment: any = AWSXRay.getSegment();
-      this.logger.info('## Log do segmento do X-Ray obtido dentro da rota POST /teste', {
-        requestId: requestId,
-        traceId: segment?.trace_id,
-      });
+      this.logger.info('## Log do segmento do X-Ray obtido dentro da rota POST /teste');
       
       const requestTesteDTO = RequestTesteDTO.fromJson(body);
       const responseTesteDTO = this.pocService.generateUUID(requestTesteDTO);
@@ -62,12 +49,7 @@ export class PocController {
   @Get('advice')
   async getAdvice(@Req() req: Request,@Res() res: Response) {
     try {
-      const requestId = req.get('request_id');
-      const segment: any = AWSXRay.getSegment();
-      this.logger.info('## Log do segmento do X-Ray obtido dentro da rotas GET /advice', {
-        requestId: requestId,
-        traceId: segment?.trace_id,
-      });
+      this.logger.info('## Log do segmento do X-Ray obtido dentro da rotas GET /advice');
 
       const data = await this.pocService.getAdviceService();
       return res.json({ data });

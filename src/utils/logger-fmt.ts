@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as winston from 'winston';
+import { RequestStoreService } from '../middleware/request-store.service';
 
 @Injectable()
 export class Logger {
@@ -7,7 +8,11 @@ export class Logger {
 
   constructor() {
     // Definindo o formato customizado do log
-    const logfmtFormat = winston.format.printf(({ level, requestId, traceId, message, timestamp, ...meta }) => {
+    const logfmtFormat = winston.format.printf(({ level, message, timestamp, ...meta }) => {
+
+      const requestId = RequestStoreService.get<string>('requestId');
+      const traceId = RequestStoreService.get<string>('traceId');
+
       let log = `time=${timestamp} severity=${level} requestId=${requestId} traceId=${traceId} message="${message}" `;
       
       // Adicionando outros metadados ao log
