@@ -28,7 +28,7 @@ export class PocController {
   // Rota: "GET /teste"
   @Get('teste')
   getTeste(@Req() req: Request, @Res() res: Response) {
-    const requestId = req.headers['requestId']
+    const requestId = req.get('request_id');
     const segment: any = AWSXRay.getSegment();  
 
     this.logger.info('## Log do segmento do X-Ray obtido dentro da rota GET /teste', {
@@ -43,7 +43,7 @@ export class PocController {
   @Post('teste')
   postTeste(@Body() body: any, @Req() req: Request, @Res() res: Response) {
     try {
-      const requestId = req.headers['requestId']
+      const requestId = req.get('request_id');
       const segment: any = AWSXRay.getSegment();
       this.logger.info('## Log do segmento do X-Ray obtido dentro da rota POST /teste', {
         requestId: requestId,
@@ -62,7 +62,7 @@ export class PocController {
   @Get('advice')
   async getAdvice(@Req() req: Request,@Res() res: Response) {
     try {
-      const requestId = req.headers['requestId']
+      const requestId = req.get('request_id');
       const segment: any = AWSXRay.getSegment();
       this.logger.info('## Log do segmento do X-Ray obtido dentro da rotas GET /advice', {
         requestId: requestId,

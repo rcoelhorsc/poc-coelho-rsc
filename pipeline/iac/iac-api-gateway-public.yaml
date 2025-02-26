@@ -154,17 +154,15 @@ Resources:
       ResourceId: !Ref PocCoelhoTesteResource
       HttpMethod: GET
       AuthorizationType: NONE  
-      RequestParameters:
-        method.request.path.requestId: true
       Integration:
-        Type: HTTP
+        Type: HTTP_PROXY
         Uri: !Sub 'http://${DNS}:${PocPort}/poc-coelho/teste'
         IntegrationHttpMethod: GET
         ConnectionType: VPC_LINK
         ConnectionId: !Ref RestApiVpcLink
-        PassthroughBehavior: NEVER
-      RequestParameters:
-        integration.request.header.requestId: "'$context.requestId'"        
+        PassthroughBehavior: WHEN_NO_TEMPLATES
+        RequestParameters:
+          integration.request.header.request_id: "'$context.requestId'"      
       MethodResponses:
         - StatusCode: '200'
 
@@ -181,7 +179,10 @@ Resources:
         Uri: !Sub 'http://${DNS}:${PocPort}/poc-coelho/teste'
         IntegrationHttpMethod: POST
         ConnectionType: VPC_LINK
-        ConnectionId: !Ref RestApiVpcLink          
+        ConnectionId: !Ref RestApiVpcLink    
+        PassthroughBehavior: WHEN_NO_TEMPLATES
+        RequestParameters:
+          integration.request.header.request_id: "'$context.requestId'"                  
       MethodResponses:
         - StatusCode: '201'
 
@@ -207,5 +208,8 @@ Resources:
         IntegrationHttpMethod: GET
         ConnectionType: VPC_LINK
         ConnectionId: !Ref RestApiVpcLink        
+        PassthroughBehavior: WHEN_NO_TEMPLATES
+        RequestParameters:
+          integration.request.header.request_id: "'$context.requestId'"            
       MethodResponses:
         - StatusCode: '200'
