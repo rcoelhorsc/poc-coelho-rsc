@@ -16,13 +16,11 @@ export class PocController {
   @Get('healthcheck')
   getHealth(@Res() res: Response) {
 
-    // const segment: any = AWSXRay.getSegment();
-    // this.logger.info('## Log do segmento do X-Ray obtido dentro da rota GET /teste', {
-    //   requestId: segment?.id,
-    //   traceId: segment?.trace_id,
-    // });
-    
-    this.logger.info('Dentro da rota GET /healthcheck')
+    const segment: any = AWSXRay.getSegment();
+    this.logger.info('## Log do segmento do X-Ray obtido dentro da rota GET /teste', {
+      requestId: segment?.id,
+      traceId: segment?.trace_id,
+    });
 
     return res.status(HttpStatus.OK).send('Healthy!');
   }
@@ -36,8 +34,6 @@ export class PocController {
       traceId: segment?.trace_id,
     });
 
-    this.logger.info('Dentro da rota GET /teste')
-
     return res.json({ message: 'Teste POC Coelho!!!' });
   }
 
@@ -45,6 +41,12 @@ export class PocController {
   @Post('teste')
   postTeste(@Body() body: any, @Res() res: Response) {
     try {
+      const segment: any = AWSXRay.getSegment();
+      this.logger.info('## Log do segmento do X-Ray obtido dentro da rota POST /teste', {
+        requestId: segment?.id,
+        traceId: segment?.trace_id,
+      });
+      
       const requestTesteDTO = RequestTesteDTO.fromJson(body);
       const responseTesteDTO = this.pocService.generateUUID(requestTesteDTO);
       return res.json(responseTesteDTO.toJson());

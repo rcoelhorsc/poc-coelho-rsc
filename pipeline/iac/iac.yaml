@@ -312,41 +312,10 @@ Resources:
             - Name: AWS_REGION
               Value: !Sub '${AWS::Region}'
             - Name: AWS_XRAY_DAEMON_NO_IMDS
-              Value: "TRUE"          
+              Value: "TRUE"
       Tags:
         - Key: 'poc-coelho'
           Value: ''
-        
-      #   # ADOT Collector como Sidecar
-      #   - Name: adot-collector
-      #     Image: public.ecr.aws/aws-observability/aws-otel-collector:latest
-      #     Essential: true
-      #     Memory: 256
-      #     Cpu: 128
-      #     Environment:
-      #       - Name: AWS_REGION
-      #         Value: !Sub '${AWS::Region}'
-      #       - Name: OTEL_EXPORTER_OTLP_ENDPOINT
-      #         Value: "http://localhost:4317"
-      #       - Name: AWS_XRAY_DAEMON_ADDRESS
-      #         Value: "0.0.0.0:2000"
-      #     PortMappings:
-      #       - ContainerPort: 4317
-      #         Protocol: 'tcp'
-      #       - ContainerPort: 4318
-      #         Protocol: 'tcp'
-      #       - ContainerPort: 2000
-      #         Protocol: 'udp'
-      #     LogConfiguration:
-      #       Options:
-      #         awslogs-create-group: true
-      #         awslogs-region: !Sub '${AWS::Region}'
-      #         awslogs-group: !Ref AwsLogsGroupName
-      #         awslogs-stream-prefix: adot
-      #       LogDriver: 'awslogs'
-      # Tags:
-      #   - Value: ''
-      #     Key: 'poc-coelho'
 
   TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup

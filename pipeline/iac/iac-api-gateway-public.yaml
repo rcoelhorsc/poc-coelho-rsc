@@ -160,6 +160,8 @@ Resources:
         IntegrationHttpMethod: GET
         ConnectionType: VPC_LINK
         ConnectionId: !Ref RestApiVpcLink
+        RequestParameters:
+          integration.request.header.requestId: context.requestId
       MethodResponses:
         - StatusCode: '200'
 
