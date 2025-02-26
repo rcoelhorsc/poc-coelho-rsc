@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, Res, HttpStatus } from '@nestjs/common';
-import { Response } from 'express';
+import { Controller, Get, Req, Post, Body, Res, HttpStatus } from '@nestjs/common';
+import { Request, Response } from 'express';
 import * as AWSXRay from 'aws-xray-sdk';
 import { PocService } from '../services/poc.service';
 import { RequestTesteDTO } from '../dtos/request-teste.dto';
@@ -14,11 +14,11 @@ export class PocController {
 
   // Rota: "GET /healthcheck"
   @Get('healthcheck')
-  getHealth(@Res() res: Response) {
-
+  getHealth(@Req() req: Request, @Res() res: Response) {
+    const requestId = req.headers['requestId']
     const segment: any = AWSXRay.getSegment();
     this.logger.info('## Log do segmento do X-Ray obtido dentro da rota GET /teste', {
-      requestId: segment?.id,
+      requestId: requestId,
       traceId: segment?.trace_id,
     });
 
@@ -27,23 +27,26 @@ export class PocController {
 
   // Rota: "GET /teste"
   @Get('teste')
-  getTeste(@Res() res: Response) {
-    const segment: any = AWSXRay.getSegment();
+  getTeste(@Req() req: Request, @Res() res: Response) {
+    const requestId = req.headers['requestId']
+    const segment: any = AWSXRay.getSegment();  
+
     this.logger.info('## Log do segmento do X-Ray obtido dentro da rota GET /teste', {
-      requestId: segment?.id,
+      requestId: requestId,
       traceId: segment?.trace_id,
     });
 
-    return res.json({ message: 'Teste POC Coelho!!!' });
+    return res.json({ message: 'Teste POC Coelho!!!', requestId });
   }
 
   // Rota: "POST /teste"
   @Post('teste')
-  postTeste(@Body() body: any, @Res() res: Response) {
+  postTeste(@Body() body: any, @Req() req: Request, @Res() res: Response) {
     try {
+      const requestId = req.headers['requestId']
       const segment: any = AWSXRay.getSegment();
       this.logger.info('## Log do segmento do X-Ray obtido dentro da rota POST /teste', {
-        requestId: segment?.id,
+        requestId: requestId,
         traceId: segment?.trace_id,
       });
       
@@ -57,11 +60,12 @@ export class PocController {
 
   // Rota: "GET /advice"
   @Get('advice')
-  async getAdvice(@Res() res: Response) {
+  async getAdvice(@Req() req: Request,@Res() res: Response) {
     try {
+      const requestId = req.headers['requestId']
       const segment: any = AWSXRay.getSegment();
       this.logger.info('## Log do segmento do X-Ray obtido dentro da rotas GET /advice', {
-        requestId: segment?.id,
+        requestId: requestId,
         traceId: segment?.trace_id,
       });
 

@@ -66,6 +66,8 @@ Resources:
           application/json: "{ \"statusCode\": 200 }"
         IntegrationResponses:
           - StatusCode: 200
+        RequestParameters:
+          integration.request.header.requestId: context.requestId          
       MethodResponses:
         - StatusCode: 200
 
@@ -128,6 +130,8 @@ Resources:
         IntegrationHttpMethod: GET
         ConnectionType: VPC_LINK
         ConnectionId: !Ref RestApiVpcLink
+        RequestParameters:
+          integration.request.header.requestId: context.requestId         
       MethodResponses:
         - StatusCode: '200'
 
@@ -145,6 +149,8 @@ Resources:
         IntegrationHttpMethod: POST
         ConnectionType: VPC_LINK
         ConnectionId: !Ref RestApiVpcLink
+        RequestParameters:
+          integration.request.header.requestId: context.requestId         
       MethodResponses:
         - StatusCode: '201'
 
@@ -170,6 +176,8 @@ Resources:
         IntegrationHttpMethod: GET
         ConnectionType: VPC_LINK
         ConnectionId: !Ref RestApiVpcLink
+        RequestParameters:
+          integration.request.header.requestId: context.requestId         
       MethodResponses:
         - StatusCode: '200'
 
