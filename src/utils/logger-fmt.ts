@@ -12,8 +12,9 @@ export class Logger {
 
       const requestId = RequestStoreService.get<string>('requestId');
       const traceId = RequestStoreService.get<string>('traceId');
+      const xamzn = RequestStoreService.get<string>('xamzn');
 
-      let log = `time=${timestamp} severity=${level} requestId=${requestId} traceId=${traceId} message="${message}" `;
+      let log = `time=${timestamp} severity=${level} requestId=${requestId} traceId=${traceId} xamzn=${xamzn} message="${message}" `;
       
       // Adicionando outros metadados ao log
       for (const key in meta) {
