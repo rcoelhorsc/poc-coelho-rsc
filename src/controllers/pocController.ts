@@ -25,6 +25,7 @@ export class PocController {
     const requestId = req.get('request_id');
     // const segment: any = AWSXRay.getSegment();  
 
+    console.log(`## GET /teste - request_id: ${requestId}`);
     this.logger.info('## Log do segmento do X-Ray obtido dentro da rota GET /teste');
 
     return res.json({ message: 'Teste POC Coelho!!!', requestId });
