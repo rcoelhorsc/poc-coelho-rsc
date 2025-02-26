@@ -9,8 +9,6 @@ export class RequestStoreMiddleware implements NestMiddleware {
     const store = new Map<string, any>();
     const requestId = req.get('request_id')
 
-    console.log(requestId);
-
     store.set('requestId', requestId);
     store.set('traceId', segment.trace_id);
 

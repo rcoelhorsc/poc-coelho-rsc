@@ -1,6 +1,5 @@
 import { Controller, Get, Req, Post, Body, Res, HttpStatus } from '@nestjs/common';
 import { Request, Response } from 'express';
-import * as AWSXRay from 'aws-xray-sdk';
 import { PocService } from '../services/poc.service';
 import { RequestTesteDTO } from '../dtos/request-teste.dto';
 import { Logger } from '../utils/logger-fmt'; // Importando o Logger
@@ -15,7 +14,7 @@ export class PocController {
   // Rota: "GET /healthcheck"
   @Get('healthcheck')
   getHealth(@Req() req: Request, @Res() res: Response) {
-    this.logger.info('## Log do segmento do X-Ray obtido dentro da rota GET /teste');
+    this.logger.info('## Log do segmento do X-Ray obtido dentro da rota GET /healthcheck');
 
     return res.status(HttpStatus.OK).send('Healthy!');
   }

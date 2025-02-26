@@ -9,14 +9,15 @@ export class XRayMiddleware implements NestMiddleware {
 
       AWSXRay.captureHTTPsGlobal(https);
 
-      const ignoredRoutes = [
-        /\/healthcheck/  // "/healthcheck" ou qualquer coisa começando com "/healthcheck"
-      ];
+      // const ignoredRoutes = [
+      //   /\/teste/,
+      //   /\/healthcheck/  // "/healthcheck" ou qualquer coisa começando com "/healthcheck"
+      // ];
 
-      if (ignoredRoutes.some(route => route.test(req.originalUrl))) {
-        // Se a rota for ignorada, não cria o segmento
-        return next();
-      }      
+      // if (ignoredRoutes.some(route => route.test(req.originalUrl))) {
+      //   // Se a rota for ignorada, não cria o segmento
+      //   return next();
+      // }      
 
       // var rules = {
       //   "rules":[
