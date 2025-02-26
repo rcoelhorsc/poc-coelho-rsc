@@ -46,8 +46,6 @@ Resources:
           - StatusCode: 200
       MethodResponses:
         - StatusCode: 200
-      RequestParameters:
-        integration.request.header.requestId: context.requestId 
 
   PocApiDeployment:
     Type: AWS::ApiGateway::Deployment
@@ -155,15 +153,15 @@ Resources:
       RestApiId: !Ref RestPocApi
       ResourceId: !Ref PocCoelhoTesteResource
       HttpMethod: GET
-      AuthorizationType: NONE
+      AuthorizationType: NONE  
       Integration:
         Type: HTTP_PROXY
         Uri: !Sub 'http://${DNS}:${PocPort}/poc-coelho/teste'
         IntegrationHttpMethod: GET
         ConnectionType: VPC_LINK
         ConnectionId: !Ref RestApiVpcLink
-        RequestParameters:
-          integration.request.header.requestId: context.requestId
+      RequestParameters:
+        integration.request.header.requestId: 'context.requestId'        
       MethodResponses:
         - StatusCode: '200'
 
@@ -180,9 +178,7 @@ Resources:
         Uri: !Sub 'http://${DNS}:${PocPort}/poc-coelho/teste'
         IntegrationHttpMethod: POST
         ConnectionType: VPC_LINK
-        ConnectionId: !Ref RestApiVpcLink
-        RequestParameters:
-          integration.request.header.requestId: context.requestId        
+        ConnectionId: !Ref RestApiVpcLink     
       MethodResponses:
         - StatusCode: '201'
 
@@ -207,9 +203,7 @@ Resources:
         Uri: !Sub 'http://${DNS}:${PocPort}/poc-coelho/advice'
         IntegrationHttpMethod: GET
         ConnectionType: VPC_LINK
-        ConnectionId: !Ref RestApiVpcLink
-        RequestParameters:
-          integration.request.header.requestId: context.requestId        
+        ConnectionId: !Ref RestApiVpcLink     
       MethodResponses:
         - StatusCode: '200'
 
