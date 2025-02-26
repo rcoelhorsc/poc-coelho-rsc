@@ -127,7 +127,9 @@ Resources:
         Uri: !Sub 'http://${DNS}:${PocPort}/poc-coelho/teste'
         IntegrationHttpMethod: GET
         ConnectionType: VPC_LINK
-        ConnectionId: !Ref RestApiVpcLink         
+        ConnectionId: !Ref RestApiVpcLink
+      RequestParameters:
+        integration.request.header.requestId: "'$context.requestId'"        
       MethodResponses:
         - StatusCode: '200'
 
