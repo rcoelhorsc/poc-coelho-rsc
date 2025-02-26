@@ -160,8 +160,6 @@ Resources:
         IntegrationHttpMethod: GET
         ConnectionType: VPC_LINK
         ConnectionId: !Ref RestApiVpcLink
-      RequestParameters:
-        integration.request.header.requestId: 'context.requestId'        
       MethodResponses:
         - StatusCode: '200'
 
@@ -178,7 +176,7 @@ Resources:
         Uri: !Sub 'http://${DNS}:${PocPort}/poc-coelho/teste'
         IntegrationHttpMethod: POST
         ConnectionType: VPC_LINK
-        ConnectionId: !Ref RestApiVpcLink     
+        ConnectionId: !Ref RestApiVpcLink          
       MethodResponses:
         - StatusCode: '201'
 
@@ -203,15 +201,6 @@ Resources:
         Uri: !Sub 'http://${DNS}:${PocPort}/poc-coelho/advice'
         IntegrationHttpMethod: GET
         ConnectionType: VPC_LINK
-        ConnectionId: !Ref RestApiVpcLink     
+        ConnectionId: !Ref RestApiVpcLink        
       MethodResponses:
         - StatusCode: '200'
-
-
-# Outputs:
-#   RootResourceId:
-#     Description: 'Root resource ID'
-#     Value: !GetAtt RestOmnichannelApi.RootResourceId
-#   RestAPIId:
-#     Description: 'API ID'
-#     Value: !Ref RestOmnichannelApi
