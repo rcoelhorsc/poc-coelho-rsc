@@ -123,7 +123,7 @@ Resources:
       HttpMethod: GET
       AuthorizationType: NONE
       Integration:
-        Type: HTTP_PROXY
+        Type: HTTP
         Uri: !Sub 'http://${DNS}:${PocPort}/poc-coelho/teste'
         IntegrationHttpMethod: GET
         ConnectionType: VPC_LINK
